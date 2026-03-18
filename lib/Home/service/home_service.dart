@@ -10,7 +10,7 @@ class HomeService {
   ApiService apiService = ApiService();
 
   Future<List<ChannelModel>> fetchChannels(BuildContext context) async {
-    var response = await apiService.getAllData("iptv/channels.json");
+    var response = await apiService.getAllData("api/channels.json");
     if (response.isLeft) {
       TeveTheme.moveToErrorPage(context: context, text: response.left.message!);
       return [];
