@@ -61,7 +61,17 @@ class _HomeState extends State<Home> {
       onWillPop: () async => false,
       child: Scaffold(
         appBar: TeveTheme.teveAppBar(
-            onFav: () {
+            onFav: () async {
+              SharedPreferences pref = await SharedPreferences.getInstance();
+              final session = pref.getString('session');
+              if (session == null || session == 'guest') {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Sign in required for favorites'),
+                ));
+                return;
+              }
+
               Navigator.push(context, MaterialPageRoute(builder: (_) {
                 return const FavScreen();
               }));

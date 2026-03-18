@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
 import 'package:teve/Home/models/fav_model.dart';
 import 'package:teve/Utils/teve_theme.dart';
@@ -35,10 +36,15 @@ class HomeService {
   }
 
   Future<List<FavModel>> fetchFavChannels(BuildContext context) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final session = pref.getString('session');
+    if (session == null || session == 'guest') {
+      return [];
+    }
+
     String endpoint = "fav/";
     var response = await apiService.getAllData(endpoint, isDb: true);
     if (response.isLeft) {
-      TeveTheme.moveToErrorPage(context: context, text: response.left.message!);
       return [];
     } else {
       return response.right.map((e) => FavModel.fromJson(e)).toList();
@@ -47,6 +53,12 @@ class HomeService {
 
   Future<String> deleteFavChannel(
       {required BuildContext context, required FavModel model}) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final session = pref.getString('session');
+    if (session == null || session == 'guest') {
+      return "Sign in to manage favorites";
+    }
+
     String endpoint = "fav/delete";
     var response =
         await apiService.deleteData(endpoint, model.toJson(), isDb: true);
