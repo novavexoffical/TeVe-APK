@@ -114,7 +114,13 @@ class ApiService {
 
   Future<Map<String, String>> getHeaders() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    String token = preferences.getString("session").toString();
+    String? token = preferences.getString("session");
+
+    // Guest mode should not send Authorization headers.
+    if (token == null || token.isEmpty || token == 'guest') {
+      return {'Content-Type': 'application/json'};
+    }
+
     return {
       "Authorization": "Bearer $token",
       'Content-Type': 'application/json'
