@@ -169,33 +169,43 @@ class _LoginState extends State<Login> {
                                 style: TeveTheme.buttonStyle(
                                     backColor: Colors.transparent,
                                     borderColor: Colors.transparent),
-                                onPressed: () {
+                                onPressed: () async {
+                                  if (_isLoading) return;
                                   if (_formKey.currentState!.validate()) {
                                     setState(() {
                                       _isLoading = true;
                                     });
-                                    service
-                                        .loginUser(
-                                            model: LoginModel(
-                                                username: emailController.text,
-                                                password:
-                                                    passwordController.text),
-                                            context: context)
-                                        .then((value) {
-                                      if (value is SessionModel) {
-                                        setState(() {
-                                          _isLoading = false;
-                                        });
-                                        Navigator.push(context,
+                                    try {
+                                      final value = await service
+                                          .loginUser(
+                                              model: LoginModel(
+                                                  username: emailController.text,
+                                                  password:
+                                                      passwordController.text),
+                                              context: context)
+                                          .timeout(const Duration(seconds: 20));
+
+                                      if (value is SessionModel && mounted) {
+                                        Navigator.pushReplacement(context,
                                             MaterialPageRoute(builder: (_) {
                                           return const Home();
                                         }));
-                                      } else {
+                                      }
+                                    } catch (_) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                          content: Text(
+                                              'Login timed out. Please try again.'),
+                                        ));
+                                      }
+                                    } finally {
+                                      if (mounted) {
                                         setState(() {
                                           _isLoading = false;
                                         });
                                       }
-                                    });
+                                    }
                                   }
                                 },
                                 child: _isLoading
@@ -225,11 +235,14 @@ class _LoginState extends State<Login> {
                                     borderRadius: BorderRadius.circular(30)),
                               ),
                               onPressed: () async {
+                                setState(() {
+                                  _isLoading = false;
+                                });
                                 SharedPreferences pref =
                                     await SharedPreferences.getInstance();
                                 await pref.setString('session', 'guest');
                                 if (!mounted) return;
-                                Navigator.push(context,
+                                Navigator.pushReplacement(context,
                                     MaterialPageRoute(builder: (_) {
                                   return const Home();
                                 }));
