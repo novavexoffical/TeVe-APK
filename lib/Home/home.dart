@@ -33,6 +33,12 @@ class _HomeState extends State<Home> {
   HomeService service = HomeService();
   late Future<List<ChannelModel>> _channels;
 
+  void _reloadChannels() {
+    setState(() {
+      _channels = service.fetchChannels(context);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +48,7 @@ class _HomeState extends State<Home> {
       DeviceOrientation.landscapeRight
     ];
     SystemChrome.setPreferredOrientations(orientations);
-    _channels = service.fetchChannels(context);
+    _reloadChannels();
     _timer =
         Timer.periodic(const Duration(milliseconds: 500), (timer) => _update());
   }
@@ -113,79 +119,135 @@ class _HomeState extends State<Home> {
             FutureBuilder<List<ChannelModel>>(
               future: _channels,
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: AnimationLimiter(
-                          child: ListView.builder(
-                              itemCount: showModels.length,
-                              shrinkWrap: true,
-                              scrollDirection: Axis.horizontal,
-                              physics: const BouncingScrollPhysics(),
-                              itemBuilder: ((context, index) {
-                                List<ChannelModel> channelObjs = [];
-                                for (ChannelModel models in snapshot.data!) {
-                                  if (models.categories!.isNotEmpty) {
-                                    if (models.categories![0].name ==
-                                        showModels[index].show_type) {
-                                      channelObjs.add(models);
-                                    }
-                                  }
-                                }
-                                showModels[index].total_channels = index != 0
-                                    ? "${channelObjs.length} Channels"
-                                    : "${snapshot.data!.length} Channels";
-
-                                return AnimationConfiguration.staggeredList(
-                                    position: index,
-                                    duration: const Duration(seconds: 1),
-                                    child: SlideAnimation(
-                                      horizontalOffset: 80.0,
-                                      child: FadeInAnimation(
-                                          child: GestureDetector(
-                                        onTap: () {
-                                          if (index == 0 || index == 1) {
-                                            Navigator.push(context,
-                                                MaterialPageRoute(
-                                                    builder: ((context) {
-                                              return SelectScreen(
-                                                  models: index == 0
-                                                      ? snapshot.data!
-                                                      : channelObjs,
-                                                  topWidget:
-                                                      showModels[index].child);
-                                            })));
-                                          } else {
-                                            Navigator.push(context,
-                                                MaterialPageRoute(
-                                                    builder: ((context) {
-                                              return ChannelScreen(
-                                                  models: channelObjs,
-                                                  topWidget:
-                                                      showModels[index].child);
-                                            })));
-                                          }
-                                        },
-                                        child: ShowCard(
-                                          model: showModels[index],
-                                        ),
-                                      )),
-                                    ));
-                              })),
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        LoadingAnimationWidget.fourRotatingDots(
+                            color: TeveTheme.logoLightColor, size: 30),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Loading channels...",
+                          style: TeveTheme.appText(
+                              size: 14, weight: FontWeight.w500),
                         ),
-                      ),
+                      ],
                     ),
                   );
-                } else {
+                }
+
+                if (snapshot.hasError) {
                   return Center(
-                    child: LoadingAnimationWidget.fourRotatingDots(
-                        color: TeveTheme.logoLightColor, size: 30),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Could not load channels",
+                          style: TeveTheme.appText(
+                              size: 18, weight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: _reloadChannels,
+                          style: TeveTheme.buttonStyle(
+                              backColor: TeveTheme.logoLightColor),
+                          child: const Text("Retry"),
+                        )
+                      ],
+                    ),
                   );
                 }
+
+                final items = snapshot.data ?? [];
+                if (items.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "No channels loaded",
+                          style: TeveTheme.appText(
+                              size: 18, weight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: _reloadChannels,
+                          style: TeveTheme.buttonStyle(
+                              backColor: TeveTheme.logoLightColor),
+                          child: const Text("Retry"),
+                        )
+                      ],
+                    ),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      child: AnimationLimiter(
+                        child: ListView.builder(
+                            itemCount: showModels.length,
+                            shrinkWrap: true,
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemBuilder: ((context, index) {
+                              List<ChannelModel> channelObjs = [];
+                              for (ChannelModel models in items) {
+                                if (models.categories!.isNotEmpty) {
+                                  if (models.categories![0].name ==
+                                      showModels[index].show_type) {
+                                    channelObjs.add(models);
+                                  }
+                                }
+                              }
+                              showModels[index].total_channels = index != 0
+                                  ? "${channelObjs.length} Channels"
+                                  : "${items.length} Channels";
+
+                              return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(seconds: 1),
+                                  child: SlideAnimation(
+                                    horizontalOffset: 80.0,
+                                    child: FadeInAnimation(
+                                        child: GestureDetector(
+                                      onTap: () {
+                                        if (index == 0 || index == 1) {
+                                          Navigator.push(context,
+                                              MaterialPageRoute(
+                                                  builder: ((context) {
+                                            return SelectScreen(
+                                                models: index == 0
+                                                    ? items
+                                                    : channelObjs,
+                                                topWidget:
+                                                    showModels[index].child);
+                                          })));
+                                        } else {
+                                          Navigator.push(context,
+                                              MaterialPageRoute(
+                                                  builder: ((context) {
+                                            return ChannelScreen(
+                                                models: channelObjs,
+                                                topWidget:
+                                                    showModels[index].child);
+                                          })));
+                                        }
+                                      },
+                                      child: ShowCard(
+                                        model: showModels[index],
+                                      ),
+                                    )),
+                                  ));
+                            })),
+                      ),
+                    ),
+                  ),
+                );
               },
             )
           ],
