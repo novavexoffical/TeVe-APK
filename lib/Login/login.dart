@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/home.dart';
 import 'package:teve/Login/models/login_model.dart';
 import 'package:teve/Login/models/session_model.dart';
@@ -211,6 +212,36 @@ class _LoginState extends State<Login> {
                                             weight: FontWeight.w600,
                                             color: TeveTheme.whiteColor),
                                       )),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width,
+                            height: 50,
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                    color: TeveTheme.logoLightColor),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30)),
+                              ),
+                              onPressed: () async {
+                                SharedPreferences pref =
+                                    await SharedPreferences.getInstance();
+                                await pref.setString('session', 'guest');
+                                if (!mounted) return;
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder: (_) {
+                                  return const Home();
+                                }));
+                              },
+                              child: Text(
+                                "Continue as Guest",
+                                style: TeveTheme.appText(
+                                    size: 15,
+                                    weight: FontWeight.w600,
+                                    color: TeveTheme.whiteColor),
+                              ),
+                            ),
                           ),
                           const SizedBox(
                             height: 80,
