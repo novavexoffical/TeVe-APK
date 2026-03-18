@@ -27,6 +27,32 @@ class ChannelScreen extends StatefulWidget {
 
 class _ChannelScreenState extends State<ChannelScreen> {
   PlayerService service = PlayerService();
+  String selectedCategory = 'All';
+  late List<String> categories;
+
+  @override
+  void initState() {
+    super.initState();
+    final set = <String>{'All'};
+    for (final m in widget.models) {
+      if (m.categories != null && m.categories!.isNotEmpty) {
+        final name = m.categories![0].name;
+        if (name != null && name.isNotEmpty) set.add(name);
+      }
+    }
+    categories = set.toList()..sort();
+    categories.remove('All');
+    categories.insert(0, 'All');
+  }
+
+  List<ChannelModel> get filteredModels {
+    if (selectedCategory == 'All') return widget.models;
+    return widget.models.where((m) {
+      return m.categories != null &&
+          m.categories!.isNotEmpty &&
+          m.categories![0].name == selectedCategory;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,81 +68,119 @@ class _ChannelScreenState extends State<ChannelScreen> {
                   tileMode: TileMode.clamp,
                   colors: [TeveTheme.darkBlue, TeveTheme.slightDarkBlue])),
         ),
-        widget.models.isEmpty
-            ? Align(
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Lottie.asset('assets/jsons/not_found.json',
-                        height: 180, width: 180),
-                    Text(
-                      "Ops, No Channels to Watch",
-                      style: TeveTheme.appText(
-                          size: 20, weight: FontWeight.w600, isShadow: true),
-                    ),
-                  ],
-                ),
-              )
-            : AnimationLimiter(
-                child: GridView.count(
-                  key: const PageStorageKey<String>('GridView'),
-                  crossAxisCount: 4,
-                  padding: const EdgeInsets.all(10),
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                  childAspectRatio: 0.8,
-                  physics: const BouncingScrollPhysics(),
-                  children: List.generate(widget.models.length, (index) {
-                    return AnimationConfiguration.staggeredGrid(
-                      position: index,
-                      duration: const Duration(seconds: 1, milliseconds: 500),
-                      columnCount: 4,
-                      child: SlideAnimation(
-                        horizontalOffset: 80.0,
-                        child: FadeInAnimation(
-                          child: ChannelCard(
-                              onFav: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) =>
-                                      _buildPopupDialog(context,
-                                          model: widget.models[index]),
-                                );
-                              },
-                              onTap: () {
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (_) {
-                                  return Player(
-                                      video_url: widget.models[index].url!);
-                                }));
-                              },
-                              isLive: widget.isLive,
-                              model: ChannelCardModel(
-                                  channel_category: widget
-                                          .models[index].categories!.isNotEmpty
-                                      ? widget
-                                          .models[index].categories![0].name!
-                                      : "Entertainment",
-                                  channel_name: widget.models[index].name!,
-                                  code: widget
-                                          .models[index].countries!.isNotEmpty
-                                      ? widget.models[index].countries![0].code!
-                                      : "International",
-                                  image_url: widget.models[index].logo != null
-                                      ? widget.models[index].logo!
-                                      : "https://i.imgur.com/rzrOS3N.png",
-                                  languages: widget
-                                          .models[index].languages!.isNotEmpty
-                                      ? widget.models[index].languages![0].name!
-                                      : "None")),
-                        ),
+        Column(
+          children: [
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 42,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final cat = categories[index];
+                  final selected = cat == selectedCategory;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(cat),
+                      selected: selected,
+                      onSelected: (_) {
+                        setState(() => selectedCategory = cat);
+                      },
+                      selectedColor: TeveTheme.logoLightColor,
+                      backgroundColor: TeveTheme.slightDarkBlue,
+                      labelStyle: TeveTheme.appText(
+                        size: 12,
+                        weight: FontWeight.w600,
+                        color: TeveTheme.whiteColor,
                       ),
-                    );
-                  }),
-                ),
-              )
+                    ),
+                  );
+                },
+              ),
+            ),
+            Expanded(
+              child: filteredModels.isEmpty
+                  ? Align(
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Lottie.asset('assets/jsons/not_found.json',
+                              height: 180, width: 180),
+                          Text(
+                            "No channels in '$selectedCategory'",
+                            style: TeveTheme.appText(
+                                size: 20,
+                                weight: FontWeight.w600,
+                                isShadow: true),
+                          ),
+                        ],
+                      ),
+                    )
+                  : AnimationLimiter(
+                      child: GridView.count(
+                        key: const PageStorageKey<String>('GridView'),
+                        crossAxisCount: 4,
+                        padding: const EdgeInsets.all(10),
+                        mainAxisSpacing: 20,
+                        crossAxisSpacing: 20,
+                        childAspectRatio: 0.8,
+                        physics: const BouncingScrollPhysics(),
+                        children:
+                            List.generate(filteredModels.length, (index) {
+                          final channel = filteredModels[index];
+                          return AnimationConfiguration.staggeredGrid(
+                            position: index,
+                            duration:
+                                const Duration(seconds: 1, milliseconds: 500),
+                            columnCount: 4,
+                            child: SlideAnimation(
+                              horizontalOffset: 80.0,
+                              child: FadeInAnimation(
+                                child: ChannelCard(
+                                    onFav: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            _buildPopupDialog(context,
+                                                model: channel),
+                                      );
+                                    },
+                                    onTap: () {
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (_) {
+                                        return Player(video_url: channel.url!);
+                                      }));
+                                    },
+                                    isLive: widget.isLive,
+                                    model: ChannelCardModel(
+                                        channel_category: channel
+                                                .categories!.isNotEmpty
+                                            ? channel.categories![0].name!
+                                            : "Entertainment",
+                                        channel_name: channel.name!,
+                                        code: channel.countries!.isNotEmpty
+                                            ? channel.countries![0].code!
+                                            : "International",
+                                        image_url: channel.logo != null
+                                            ? channel.logo!
+                                            : "https://i.imgur.com/rzrOS3N.png",
+                                        languages:
+                                            channel.languages!.isNotEmpty
+                                                ? channel.languages![0].name!
+                                                : "None")),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+            ),
+          ],
+        )
       ]),
     );
   }

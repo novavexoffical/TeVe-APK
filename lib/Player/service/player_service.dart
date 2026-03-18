@@ -9,6 +9,12 @@ class PlayerService {
 
   Future<String> addToFav(
       {required BuildContext context, required ChannelModel model}) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final session = pref.getString('session');
+    if (session == null || session == 'guest') {
+      return "Sign in required to use favorites";
+    }
+
     String endpoint = "fav/add";
     var response =
         await _service.postHeaderData(endpoint, model.toJson(), isDb: true);
