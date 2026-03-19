@@ -22,8 +22,14 @@ class HomeService {
     "https://cdn.jsdelivr.net/gh/iptv-org/iptv@master/channels.json",
   ];
 
+  static const List<String> _streamSources = [
+    "https://iptv-org.github.io/api/streams.json",
+    "https://cdn.jsdelivr.net/gh/iptv-org/iptv@master/streams.json",
+  ];
+
   Future<List<ChannelModel>> fetchChannels(BuildContext context) async {
     Object? lastError;
+    final streamMaps = await _fetchStreamMaps();
 
     for (final source in _channelSources) {
       final uri = Uri.parse(source);
@@ -43,7 +49,11 @@ class HomeService {
               jsonDecode(response.body) as List<dynamic>;
           final channels = payload
               .whereType<Map<String, dynamic>>()
-              .map(_channelFromAnyJson)
+              .map((json) => _channelFromAnyJson(
+                    json,
+                    streamByChannelId: streamMaps.$1,
+                    streamByTitle: streamMaps.$2,
+                  ))
               .whereType<ChannelModel>()
               .toList();
 
@@ -71,7 +81,51 @@ class HomeService {
     return [];
   }
 
-  ChannelModel? _channelFromAnyJson(Map<String, dynamic> json) {
+  Future<(Map<String, String>, Map<String, String>)> _fetchStreamMaps() async {
+    final byChannelId = <String, String>{};
+    final byTitle = <String, String>{};
+
+    for (final source in _streamSources) {
+      final uri = Uri.parse(source);
+      try {
+        final response = await http
+            .get(uri, headers: {"accept": "application/json"})
+            .timeout(const Duration(seconds: 25));
+        if (response.statusCode != 200) continue;
+
+        final List<dynamic> payload = jsonDecode(response.body) as List<dynamic>;
+        for (final item in payload) {
+          if (item is! Map<String, dynamic>) continue;
+          final url = item['url']?.toString();
+          if (url == null || url.isEmpty) continue;
+
+          final channelId = item['channel']?.toString();
+          if (channelId != null && channelId.isNotEmpty) {
+            byChannelId.putIfAbsent(channelId, () => url);
+          }
+
+          final title = item['title']?.toString().toLowerCase().trim();
+          if (title != null && title.isNotEmpty) {
+            byTitle.putIfAbsent(title, () => url);
+          }
+        }
+
+        if (byChannelId.isNotEmpty || byTitle.isNotEmpty) {
+          break;
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return (byChannelId, byTitle);
+  }
+
+  ChannelModel? _channelFromAnyJson(
+    Map<String, dynamic> json, {
+    required Map<String, String> streamByChannelId,
+    required Map<String, String> streamByTitle,
+  }) {
     try {
       final categoriesRaw = json['categories'];
       final countriesRaw = json['countries'];
@@ -113,10 +167,19 @@ class HomeService {
         }
       }
 
+      final channelName = (json['name'] ?? '').toString();
+      final channelId = json['id']?.toString();
+      final directUrl =
+          (json['url'] ?? json['stream'] ?? json['stream_url'])?.toString();
+      final resolvedUrl = (directUrl != null && directUrl.isNotEmpty)
+          ? directUrl
+          : (channelId != null ? streamByChannelId[channelId] : null) ??
+              streamByTitle[channelName.toLowerCase().trim()];
+
       return ChannelModel(
-        name: (json['name'] ?? '').toString(),
+        name: channelName,
         logo: (json['logo'] ?? json['logo_url'])?.toString(),
-        url: (json['url'] ?? json['stream'] ?? json['stream_url'])?.toString(),
+        url: resolvedUrl,
         categories: categories,
         countries: countries,
         languages: languages,

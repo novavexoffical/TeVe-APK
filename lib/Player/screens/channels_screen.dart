@@ -150,9 +150,27 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                       );
                                     },
                                     onTap: () {
+                                      final streamUrl = channel.url;
+                                      if (streamUrl == null ||
+                                          streamUrl.trim().isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "No playable stream found for this channel yet.",
+                                              style: TeveTheme.appText(
+                                                  size: 12,
+                                                  weight: FontWeight.w500),
+                                            ),
+                                            backgroundColor: TeveTheme.slightBlue,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
                                       Navigator.push(context,
                                           MaterialPageRoute(builder: (_) {
-                                        return Player(video_url: channel.url!);
+                                        return Player(video_url: streamUrl);
                                       }));
                                     },
                                     isLive: widget.isLive,
