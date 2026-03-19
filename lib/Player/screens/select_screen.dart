@@ -108,12 +108,13 @@ class _SelectScreenState extends State<SelectScreen> {
                   tileMode: TileMode.clamp,
                   colors: [TeveTheme.darkBlue, TeveTheme.slightBlue])),
         ),
-        Align(
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+        SafeArea(
+          child: Align(
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -277,18 +278,22 @@ class _SelectScreenState extends State<SelectScreen> {
                 height: 10,
               ),
               if (countries.isNotEmpty)
-                ElevatedButton(
-                  onLongPress: () {
-                    buttonCarouselController.animateToPage(currentIndex + 20);
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: TeveTheme.logoLightColor),
-                  onPressed: () => buttonCarouselController.nextPage(
-                      duration: const Duration(milliseconds: 100),
-                      curve: Curves.linear),
-                  child: const Icon(
-                    Icons.arrow_forward,
-                    size: 24,
+                Padding(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 14),
+                  child: ElevatedButton(
+                    onLongPress: () {
+                      buttonCarouselController.animateToPage(currentIndex + 20);
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: TeveTheme.logoLightColor),
+                    onPressed: () => buttonCarouselController.nextPage(
+                        duration: const Duration(milliseconds: 100),
+                        curve: Curves.linear),
+                    child: const Icon(
+                      Icons.arrow_forward,
+                      size: 24,
+                    ),
                   ),
                 )
             ],
@@ -298,7 +303,8 @@ class _SelectScreenState extends State<SelectScreen> {
           alignment: Alignment.bottomRight,
           child: Container(
             padding: const EdgeInsets.all(10),
-            margin: const EdgeInsets.all(10),
+            margin: EdgeInsets.fromLTRB(
+                10, 10, 10, MediaQuery.of(context).padding.bottom + 64),
             decoration: BoxDecoration(
                 color: TeveTheme.darkBlue,
                 borderRadius: BorderRadius.circular(15)),
