@@ -321,11 +321,11 @@ class _ChannelScreenState extends State<ChannelScreen> {
                       : AnimationLimiter(
                           child: GridView.count(
                             key: const PageStorageKey<String>('GridView'),
-                            crossAxisCount: 4,
+                            crossAxisCount: 3,
                             padding: const EdgeInsets.all(10),
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 20,
-                            childAspectRatio: 0.8,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: 2.6,
                             physics: const BouncingScrollPhysics(),
                             children:
                                 List.generate(filteredModels.length, (index) {
@@ -334,7 +334,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                 position: index,
                                 duration:
                                     const Duration(seconds: 1, milliseconds: 500),
-                                columnCount: 4,
+                                columnCount: 3,
                                 child: SlideAnimation(
                                   horizontalOffset: 80.0,
                                   child: FadeInAnimation(
