@@ -299,6 +299,7 @@ class _SelectScreenState extends State<SelectScreen> {
             ],
           ),
         ),
+        ),
         Align(
           alignment: Alignment.bottomRight,
           child: Container(
