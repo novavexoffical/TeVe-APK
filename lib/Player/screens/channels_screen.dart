@@ -12,21 +12,23 @@ import 'package:teve/Player/ui_view/channel_card.dart';
 import '../../Utils/teve_theme.dart';
 
 class ChannelScreen extends StatefulWidget {
-  ChannelScreen(
-      {super.key,
-      required this.topWidget,
-      required this.models,
-      this.isLive = false});
-  Widget topWidget;
-  List<ChannelModel> models;
-  bool isLive;
+  ChannelScreen({
+    super.key,
+    required this.topWidget,
+    required this.models,
+    this.isLive = false,
+  });
+
+  final Widget topWidget;
+  final List<ChannelModel> models;
+  final bool isLive;
 
   @override
   State<ChannelScreen> createState() => _ChannelScreenState();
 }
 
 class _ChannelScreenState extends State<ChannelScreen> {
-  PlayerService service = PlayerService();
+  final PlayerService service = PlayerService();
   String selectedCategory = 'All';
   bool playableOnly = false;
   bool listView = false;
@@ -58,222 +60,6 @@ class _ChannelScreenState extends State<ChannelScreen> {
     }).toList();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TeveTheme.teveAppBar(child: widget.topWidget),
-      body: Stack(children: [
-        Container(
-          decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                  begin: FractionalOffset(0.0, 0.0),
-                  end: FractionalOffset(1.0, 0.0),
-                  stops: [0.0, 1.0],
-                  tileMode: TileMode.clamp,
-                  colors: [TeveTheme.darkBlue, TeveTheme.slightDarkBlue])),
-        ),
-        Column(
-          children: [
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 42,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  final selected = cat == selectedCategory;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(cat),
-                      selected: selected,
-                      onSelected: (_) {
-                        setState(() => selectedCategory = cat);
-                      },
-                      selectedColor: TeveTheme.logoLightColor,
-                      backgroundColor: TeveTheme.slightDarkBlue,
-                      labelStyle: TeveTheme.appText(
-                        size: 12,
-                        weight: FontWeight.w600,
-                        color: TeveTheme.whiteColor,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                children: [
-                  FilterChip(
-                    label: Text(
-                      'Playable only',
-                      style: TeveTheme.appText(
-                        size: 12,
-                        weight: FontWeight.w600,
-                        color: TeveTheme.whiteColor,
-                      ),
-                    ),
-                    selected: playableOnly,
-                    onSelected: (val) {
-                      setState(() => playableOnly = val);
-                    },
-                    selectedColor: TeveTheme.logoLightColor,
-                    backgroundColor: TeveTheme.slightDarkBlue,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    tooltip: listView ? 'Grid view' : 'List view',
-                    onPressed: () => setState(() => listView = !listView),
-                    icon: Icon(
-                      listView ? Icons.grid_view_rounded : Icons.view_list_rounded,
-                      color: TeveTheme.whiteColor,
-                    ),
-                  ),
-                  Text(
-                    '${filteredModels.length} shown',
-                    style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
-                  )
-                ],
-              ),
-            ),
-            Expanded(
-              child: filteredModels.isEmpty
-                  ? Align(
-                      alignment: Alignment.center,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Lottie.asset('assets/jsons/not_found.json',
-                              height: 180, width: 180),
-                          Text(
-                            "No channels in '$selectedCategory'",
-                            style: TeveTheme.appText(
-                                size: 20,
-                                weight: FontWeight.w600,
-                                isShadow: true),
-                          ),
-                        ],
-                      ),
-                    )
-                  : listView
-                      ? ListView.builder(
-                          padding: const EdgeInsets.all(10),
-                          itemCount: filteredModels.length,
-                          itemBuilder: (context, index) {
-                            final channel = filteredModels[index];
-                            return Card(
-                              color: TeveTheme.slightDarkBlue,
-                              child: ListTile(
-                                autofocus: index == 0,
-                                onTap: () => _openChannel(context, channel),
-                                leading: Icon(
-                                  channel.isBlocked
-                                      ? Icons.block
-                                      : channel.isPlayable
-                                          ? Icons.play_circle_fill
-                                          : Icons.info_outline,
-                                  color: channel.isBlocked
-                                      ? Colors.redAccent
-                                      : channel.isPlayable
-                                          ? Colors.greenAccent
-                                          : Colors.orangeAccent,
-                                ),
-                                title: Text(
-                                  channel.name ?? 'Unknown',
-                                  style: TeveTheme.appText(
-                                      size: 14, weight: FontWeight.w600),
-                                ),
-                                subtitle: Text(
-                                  channel.categories!.isNotEmpty
-                                      ? channel.categories![0].name ?? 'General'
-                                      : 'General',
-                                  style: TeveTheme.appText(
-                                      size: 11,
-                                      weight: FontWeight.w500,
-                                      color: Colors.white70),
-                                ),
-                                trailing: IconButton(
-                                  onPressed: () => showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        _buildPopupDialog(context,
-                                            model: channel),
-                                  ),
-                                  icon: const Icon(Icons.more_vert,
-                                      color: Colors.white),
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : AnimationLimiter(
-                          child: GridView.count(
-                            key: const PageStorageKey<String>('GridView'),
-                            crossAxisCount: 4,
-                            padding: const EdgeInsets.all(10),
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 20,
-                            childAspectRatio: 0.8,
-                            physics: const BouncingScrollPhysics(),
-                            children: List.generate(filteredModels.length,
-                                (index) {
-                              final channel = filteredModels[index];
-                              return AnimationConfiguration.staggeredGrid(
-                                position: index,
-                                duration: const Duration(
-                                    seconds: 1, milliseconds: 500),
-                                columnCount: 4,
-                                child: SlideAnimation(
-                                  horizontalOffset: 80.0,
-                                  child: FadeInAnimation(
-                                    child: ChannelCard(
-                                        isPlayable: channel.isPlayable,
-                                        isBlocked: channel.isBlocked,
-                                        onFav: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) =>
-                                                _buildPopupDialog(context,
-                                                    model: channel),
-                                          );
-                                        },
-                                        onTap: () => _openChannel(context, channel),
-                                        isLive: widget.isLive,
-                                        model: ChannelCardModel(
-                                            channel_category: channel
-                                                    .categories!.isNotEmpty
-                                                ? channel.categories![0].name!
-                                                : "Entertainment",
-                                            channel_name: channel.name!,
-                                            code: channel.countries!.isNotEmpty
-                                                ? channel.countries![0].code!
-                                                : "International",
-                                            image_url: channel.logo != null
-                                                ? channel.logo!
-                                                : "https://i.imgur.com/rzrOS3N.png",
-                                            languages:
-                                                channel.languages!.isNotEmpty
-                                                    ? channel.languages![0].name!
-                                                    : "None")),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
-            ),
-          ],
-        )
-      ]),
-    );
-  }
-
   void _openChannel(BuildContext context, ChannelModel channel) {
     final streamUrl = channel.url;
     if (!channel.isPlayable || streamUrl == null || streamUrl.trim().isEmpty) {
@@ -297,8 +83,226 @@ class _ChannelScreenState extends State<ChannelScreen> {
     }));
   }
 
-  Widget _buildPopupDialog(BuildContext context,
-      {required ChannelModel model}) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: TeveTheme.teveAppBar(child: widget.topWidget),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: FractionalOffset(0.0, 0.0),
+                end: FractionalOffset(1.0, 0.0),
+                stops: [0.0, 1.0],
+                tileMode: TileMode.clamp,
+                colors: [TeveTheme.darkBlue, TeveTheme.slightDarkBlue],
+              ),
+            ),
+          ),
+          Column(
+            children: [
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 42,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = categories[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(cat),
+                        selected: cat == selectedCategory,
+                        onSelected: (_) => setState(() => selectedCategory = cat),
+                        selectedColor: TeveTheme.logoLightColor,
+                        backgroundColor: TeveTheme.slightDarkBlue,
+                        labelStyle: TeveTheme.appText(
+                          size: 12,
+                          weight: FontWeight.w600,
+                          color: TeveTheme.whiteColor,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    FilterChip(
+                      label: Text(
+                        'Playable only',
+                        style: TeveTheme.appText(
+                          size: 12,
+                          weight: FontWeight.w600,
+                          color: TeveTheme.whiteColor,
+                        ),
+                      ),
+                      selected: playableOnly,
+                      onSelected: (val) => setState(() => playableOnly = val),
+                      selectedColor: TeveTheme.logoLightColor,
+                      backgroundColor: TeveTheme.slightDarkBlue,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: listView ? 'Grid view' : 'List view',
+                      onPressed: () => setState(() => listView = !listView),
+                      icon: Icon(
+                        listView
+                            ? Icons.grid_view_rounded
+                            : Icons.view_list_rounded,
+                        color: TeveTheme.whiteColor,
+                      ),
+                    ),
+                    Text(
+                      '${filteredModels.length} shown',
+                      style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: filteredModels.isEmpty
+                    ? _emptyState()
+                    : (listView ? _listBody() : _gridBody()),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyState() {
+    return Align(
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Lottie.asset('assets/jsons/not_found.json', height: 180, width: 180),
+          Text(
+            "No channels in '$selectedCategory'",
+            style:
+                TeveTheme.appText(size: 20, weight: FontWeight.w600, isShadow: true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _listBody() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(10),
+      itemCount: filteredModels.length,
+      itemBuilder: (context, index) {
+        final channel = filteredModels[index];
+        return Card(
+          color: TeveTheme.slightDarkBlue,
+          child: ListTile(
+            autofocus: index == 0,
+            onTap: () => _openChannel(context, channel),
+            leading: Icon(
+              channel.isBlocked
+                  ? Icons.block
+                  : channel.isPlayable
+                      ? Icons.play_circle_fill
+                      : Icons.info_outline,
+              color: channel.isBlocked
+                  ? Colors.redAccent
+                  : channel.isPlayable
+                      ? Colors.greenAccent
+                      : Colors.orangeAccent,
+            ),
+            title: Text(
+              channel.name ?? 'Unknown',
+              style: TeveTheme.appText(size: 14, weight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              (channel.categories != null && channel.categories!.isNotEmpty)
+                  ? (channel.categories![0].name ?? 'General')
+                  : 'General',
+              style: TeveTheme.appText(
+                size: 11,
+                weight: FontWeight.w500,
+                color: Colors.white70,
+              ),
+            ),
+            trailing: IconButton(
+              onPressed: () => showDialog(
+                context: context,
+                builder: (BuildContext context) =>
+                    _buildPopupDialog(context, model: channel),
+              ),
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _gridBody() {
+    return AnimationLimiter(
+      child: GridView.count(
+        key: const PageStorageKey<String>('GridView'),
+        crossAxisCount: 4,
+        padding: const EdgeInsets.all(10),
+        mainAxisSpacing: 20,
+        crossAxisSpacing: 20,
+        childAspectRatio: 0.8,
+        physics: const BouncingScrollPhysics(),
+        children: List.generate(filteredModels.length, (index) {
+          final channel = filteredModels[index];
+          return AnimationConfiguration.staggeredGrid(
+            position: index,
+            duration: const Duration(seconds: 1, milliseconds: 500),
+            columnCount: 4,
+            child: SlideAnimation(
+              horizontalOffset: 80.0,
+              child: FadeInAnimation(
+                child: ChannelCard(
+                  isPlayable: channel.isPlayable,
+                  isBlocked: channel.isBlocked,
+                  onFav: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) =>
+                          _buildPopupDialog(context, model: channel),
+                    );
+                  },
+                  onTap: () => _openChannel(context, channel),
+                  isLive: widget.isLive,
+                  model: ChannelCardModel(
+                    channel_category:
+                        (channel.categories != null && channel.categories!.isNotEmpty)
+                            ? (channel.categories![0].name ?? 'Entertainment')
+                            : 'Entertainment',
+                    channel_name: channel.name ?? 'Unknown',
+                    code: (channel.countries != null && channel.countries!.isNotEmpty)
+                        ? (channel.countries![0].code ?? 'International')
+                        : 'International',
+                    image_url: channel.logo ?? 'https://i.imgur.com/rzrOS3N.png',
+                    languages:
+                        (channel.languages != null && channel.languages!.isNotEmpty)
+                            ? (channel.languages![0].name ?? 'None')
+                            : 'None',
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildPopupDialog(BuildContext context, {required ChannelModel model}) {
     return AlertDialog(
       backgroundColor: TeveTheme.slightDarkBlue,
       actionsAlignment: MainAxisAlignment.spaceBetween,
@@ -311,7 +315,10 @@ class _ChannelScreenState extends State<ChannelScreen> {
           Text(
             "Do you want to add this channel \nto your favorite's?",
             style: TeveTheme.appText(
-                size: 15, weight: FontWeight.w500, color: TeveTheme.whiteColor),
+              size: 15,
+              weight: FontWeight.w500,
+              color: TeveTheme.whiteColor,
+            ),
           ),
         ],
       ),

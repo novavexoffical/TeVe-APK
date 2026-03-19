@@ -30,7 +30,7 @@ class _LoginState extends State<Login> {
     WidgetsFlutterBinding.ensureInitialized();
     const orientations = [
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown
+      DeviceOrientation.portraitDown,
     ];
     SystemChrome.setPreferredOrientations(orientations);
     super.initState();
@@ -42,267 +42,292 @@ class _LoginState extends State<Login> {
       onWillPop: () async => false,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        body: Stack(children: [
-          Container(
-            decoration: const BoxDecoration(
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    stops: [0.0, 1.0],
-                    tileMode: TileMode.clamp,
-                    colors: [TeveTheme.darkBlue, TeveTheme.slightBlue])),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: FocusTraversalGroup(
-              child: SingleChildScrollView(
-                child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  stops: [0.0, 1.0],
+                  tileMode: TileMode.clamp,
+                  colors: [TeveTheme.darkBlue, TeveTheme.slightBlue],
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: FocusTraversalGroup(
+                child: SingleChildScrollView(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        height: 50,
-                        width: 50,
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            height: 50,
+                            width: 50,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
                                 begin: const FractionalOffset(0.0, 0.0),
                                 end: const FractionalOffset(1.0, 0.0),
                                 stops: const [0.0, 1.0],
                                 tileMode: TileMode.clamp,
                                 colors: [
                                   TeveTheme.logoDarkColor,
-                                  TeveTheme.logoLightColor.withOpacity(0.6)
-                                ]),
-                            borderRadius: BorderRadius.circular(25)),
-                        child: const Center(
-                          child: Icon(
-                            Icons.live_tv_rounded,
-                            color: TeveTheme.darkBlue,
-                            size: 30,
+                                  TeveTheme.logoLightColor.withOpacity(0.6),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.live_tv_rounded,
+                                color: TeveTheme.darkBlue,
+                                size: 30,
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "TeVe",
+                            style: TeveTheme.appText(
+                              size: 40,
+                              weight: FontWeight.w600,
+                              isShadow: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Sign In to continue",
+                        style: TeveTheme.appText(
+                          size: 21,
+                          weight: FontWeight.w500,
+                          isShadow: true,
                         ),
                       ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Text(
-                        "TeVe",
-                        style: TeveTheme.appText(
-                            size: 40, weight: FontWeight.w600, isShadow: true),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    "Sign In to continue",
-                    style: TeveTheme.appText(
-                        size: 21, weight: FontWeight.w500, isShadow: true),
-                  ),
-                  const SizedBox(
-                    height: 40,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            autofocus: true,
-                            controller: emailController,
-                            style: TeveTheme.appText(
-                                size: 14, weight: FontWeight.normal),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Please enter email";
-                              }
-                              return null;
-                            },
-                            decoration: TeveTheme.waInputDecoration(
-                              hint: "Email",
-                              fontSize: 15,
-                              prefixIcon: Icons.mail,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 12,
-                          ),
-                          TextFormField(
-                            controller: passwordController,
-                            style: TeveTheme.appText(
-                                size: 14, weight: FontWeight.normal),
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Please enter password";
-                              }
-                              return null;
-                            },
-                            decoration: TeveTheme.waInputDecoration(
-                              hint: "Password",
-                              fontSize: 15,
-                              prefixIcon: Icons.lock,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: 55,
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                      const SizedBox(height: 40),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                autofocus: true,
+                                controller: emailController,
+                                style: TeveTheme.appText(
+                                  size: 14,
+                                  weight: FontWeight.normal,
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter email";
+                                  }
+                                  return null;
+                                },
+                                decoration: TeveTheme.waInputDecoration(
+                                  hint: "Email",
+                                  fontSize: 15,
+                                  prefixIcon: Icons.mail,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: passwordController,
+                                style: TeveTheme.appText(
+                                  size: 14,
+                                  weight: FontWeight.normal,
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter password";
+                                  }
+                                  return null;
+                                },
+                                decoration: TeveTheme.waInputDecoration(
+                                  hint: "Password",
+                                  fontSize: 15,
+                                  prefixIcon: Icons.lock,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                height: 55,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
                                     end: Alignment.topRight,
                                     begin: Alignment.bottomLeft,
                                     stops: const [0.0, 1.0],
                                     tileMode: TileMode.clamp,
                                     colors: [
                                       TeveTheme.logoDarkColor,
-                                      TeveTheme.logoLightColor.withOpacity(0.7)
-                                    ]),
-                                borderRadius: BorderRadius.circular(30)),
-                            child: ElevatedButton(
-                                style: TeveTheme.buttonStyle(
+                                      TeveTheme.logoLightColor.withOpacity(0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: ElevatedButton(
+                                  style: TeveTheme.buttonStyle(
                                     backColor: Colors.transparent,
-                                    borderColor: Colors.transparent),
-                                onPressed: () async {
-                                  if (_isLoading) return;
-                                  if (_formKey.currentState!.validate()) {
-                                    setState(() {
-                                      _isLoading = true;
-                                    });
-                                    try {
-                                      final value = await service
-                                          .loginUser(
+                                    borderColor: Colors.transparent,
+                                  ),
+                                  onPressed: () async {
+                                    if (_isLoading) return;
+                                    if (_formKey.currentState!.validate()) {
+                                      setState(() {
+                                        _isLoading = true;
+                                      });
+                                      try {
+                                        final value = await service
+                                            .loginUser(
                                               model: LoginModel(
-                                                  username: emailController.text,
-                                                  password:
-                                                      passwordController.text),
-                                              context: context)
-                                          .timeout(const Duration(seconds: 20));
+                                                username: emailController.text,
+                                                password: passwordController.text,
+                                              ),
+                                              context: context,
+                                            )
+                                            .timeout(const Duration(seconds: 20));
 
-                                      if (value is SessionModel && mounted) {
-                                        Navigator.pushReplacement(context,
+                                        if (value is SessionModel && mounted) {
+                                          Navigator.pushReplacement(
+                                            context,
                                             MaterialPageRoute(builder: (_) {
-                                          return const Home();
-                                        }));
-                                      }
-                                    } catch (_) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                          content: Text(
-                                              'Login timed out. Please try again.'),
-                                        ));
-                                      }
-                                    } finally {
-                                      if (mounted) {
-                                        setState(() {
-                                          _isLoading = false;
-                                        });
+                                              return const Home();
+                                            }),
+                                          );
+                                        }
+                                      } catch (_) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Login timed out. Please try again.',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
+                                        }
                                       }
                                     }
-                                  }
-                                },
-                                child: _isLoading
-                                    ? Center(
-                                        child: LoadingAnimationWidget
-                                            .staggeredDotsWave(
-                                        color: Colors.white,
-                                        size: 20,
-                                      ))
-                                    : Text(
-                                        "Sign In",
-                                        style: TeveTheme.appText(
+                                  },
+                                  child: _isLoading
+                                      ? Center(
+                                          child: LoadingAnimationWidget
+                                              .staggeredDotsWave(
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        )
+                                      : Text(
+                                          "Sign In",
+                                          style: TeveTheme.appText(
                                             size: 16,
                                             weight: FontWeight.w600,
-                                            color: TeveTheme.whiteColor),
-                                      )),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            height: 50,
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                    color: TeveTheme.logoLightColor),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30)),
+                                            color: TeveTheme.whiteColor,
+                                          ),
+                                        ),
+                                ),
                               ),
-                              onPressed: () async {
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                                SharedPreferences pref =
-                                    await SharedPreferences.getInstance();
-                                await pref.setString('session', 'guest');
-                                if (!mounted) return;
-                                Navigator.pushReplacement(context,
-                                    MaterialPageRoute(builder: (_) {
-                                  return const Home();
-                                }));
-                              },
-                              child: Text(
-                                "Continue as Guest",
-                                style: TeveTheme.appText(
-                                    size: 15,
-                                    weight: FontWeight.w600,
-                                    color: TeveTheme.whiteColor),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width,
+                                height: 50,
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(
+                                      color: TeveTheme.logoLightColor,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                    SharedPreferences pref =
+                                        await SharedPreferences.getInstance();
+                                    await pref.setString('session', 'guest');
+                                    if (!mounted) return;
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (_) {
+                                        return const Home();
+                                      }),
+                                    );
+                                  },
+                                  child: Text(
+                                    "Continue as Guest",
+                                    style: TeveTheme.appText(
+                                      size: 15,
+                                      weight: FontWeight.w600,
+                                      color: TeveTheme.whiteColor,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 80),
+                            ],
                           ),
-                          const SizedBox(
-                            height: 80,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-          Padding(
-            padding: const EdgeInsets.all(30.0),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Dont have any account? ",
-                    style: TeveTheme.appText(
-                        size: 12, weight: FontWeight.w500, isShadow: true),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) {
-                        return const SignUp();
-                      }));
-                    },
-                    child: Text(
-                      "Register",
+            Padding(
+              padding: const EdgeInsets.all(30.0),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Dont have any account? ",
                       style: TeveTheme.appText(
+                        size: 12,
+                        weight: FontWeight.w500,
+                        isShadow: true,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) {
+                          return const SignUp();
+                        }));
+                      },
+                      child: Text(
+                        "Register",
+                        style: TeveTheme.appText(
                           size: 12,
                           weight: FontWeight.w600,
                           isShadow: true,
-                          color: TeveTheme.logoDarkColor),
+                          color: TeveTheme.logoDarkColor,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          )
-        ]),
+          ],
+        ),
       ),
     );
   }
