@@ -90,6 +90,26 @@ class _SelectScreenState extends State<SelectScreen> {
     super.dispose();
   }
 
+  void _openCountry(_CountryEntry entry) {
+    Navigator.push(context, MaterialPageRoute(builder: ((context) {
+      return ChannelScreen(
+          isLive: true,
+          models: entry.channels,
+          topWidget:
+              Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            widget.topWidget,
+            const SizedBox(width: 5),
+            Text(
+              entry.name,
+              style: TeveTheme.appText(
+                  size: 14,
+                  weight: FontWeight.w500,
+                  color: TeveTheme.logoDarkColor),
+            )
+          ]));
+    })));
+  }
+
   @override
   Widget build(BuildContext context) {
     final countries = _filteredCountries;
@@ -191,29 +211,7 @@ class _SelectScreenState extends State<SelectScreen> {
                                   borderRadius: BorderRadius.circular(70),
                                   onTap: () {
                                     setState(() => _current = index);
-                                    Navigator.push(context,
-                                        MaterialPageRoute(builder: ((context) {
-                                      return ChannelScreen(
-                                          isLive: true,
-                                          models: entry.channels,
-                                          topWidget: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                widget.topWidget,
-                                                const SizedBox(
-                                                  width: 5,
-                                                ),
-                                                Text(
-                                                  entry.name,
-                                                  style: TeveTheme.appText(
-                                                      size: 14,
-                                                      weight: FontWeight.w500,
-                                                      color: TeveTheme
-                                                          .logoDarkColor),
-                                                )
-                                              ]));
-                                    })));
+                                    _openCountry(entry);
                                   },
                                   child: Container(
                                     height: 120,
@@ -295,19 +293,42 @@ class _SelectScreenState extends State<SelectScreen> {
                 Padding(
                   padding: EdgeInsets.only(
                       bottom: MediaQuery.of(context).padding.bottom + 14),
-                  child: ElevatedButton(
-                    onLongPress: () {
-                      buttonCarouselController.animateToPage(currentIndex + 20);
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: TeveTheme.logoLightColor),
-                    onPressed: () => buttonCarouselController.nextPage(
-                        duration: const Duration(milliseconds: 100),
-                        curve: Curves.linear),
-                    child: const Icon(
-                      Icons.arrow_forward,
-                      size: 24,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: TeveTheme.logoLightColor),
+                        onPressed: () {
+                          final prev = currentIndex > 0 ? currentIndex - 1 : 0;
+                          buttonCarouselController.animateToPage(prev);
+                          setState(() => _current = prev);
+                        },
+                        child: const Icon(Icons.arrow_back, size: 22),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: TeveTheme.logoDarkColor),
+                        onPressed: () => _openCountry(countries[currentIndex]),
+                        child: Text('Select',
+                            style: TeveTheme.appText(
+                                size: 14, weight: FontWeight.w600)),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: TeveTheme.logoLightColor),
+                        onPressed: () {
+                          final next = currentIndex < countries.length - 1
+                              ? currentIndex + 1
+                              : currentIndex;
+                          buttonCarouselController.animateToPage(next);
+                          setState(() => _current = next);
+                        },
+                        child: const Icon(Icons.arrow_forward, size: 22),
+                      ),
+                    ],
                   ),
                 )
             ],
