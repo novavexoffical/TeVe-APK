@@ -25,6 +25,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late Timer _timer;
+  int? _focusedHomeIndex;
   String formattedTime =
       DateFormat("hh:mm a").format(DateTime.now()).toString();
   String formattedDate =
@@ -58,6 +59,21 @@ class _HomeState extends State<Home> {
       formattedDate =
           DateFormat("MMM dd, yyyy").format(DateTime.now()).toString();
     });
+  }
+
+  void _openHomeCategory(int index, List<ChannelModel> items,
+      List<ChannelModel> channelObjs) {
+    if (index == 0 || index == 1) {
+      Navigator.push(context, MaterialPageRoute(builder: ((context) {
+        return SelectScreen(
+            models: index == 0 ? items : channelObjs,
+            topWidget: showModels[index].child);
+      })));
+    } else {
+      Navigator.push(context, MaterialPageRoute(builder: ((context) {
+        return ChannelScreen(models: channelObjs, topWidget: showModels[index].child);
+      })));
+    }
   }
 
   @override
@@ -203,32 +219,45 @@ class _HomeState extends State<Home> {
                                   child: SlideAnimation(
                                     horizontalOffset: 80.0,
                                     child: FadeInAnimation(
-                                        child: GestureDetector(
-                                      onTap: () {
-                                        if (index == 0 || index == 1) {
-                                          Navigator.push(context,
-                                              MaterialPageRoute(
-                                                  builder: ((context) {
-                                            return SelectScreen(
-                                                models: index == 0
-                                                    ? items
-                                                    : channelObjs,
-                                                topWidget:
-                                                    showModels[index].child);
-                                          })));
-                                        } else {
-                                          Navigator.push(context,
-                                              MaterialPageRoute(
-                                                  builder: ((context) {
-                                            return ChannelScreen(
-                                                models: channelObjs,
-                                                topWidget:
-                                                    showModels[index].child);
-                                          })));
+                                        child: Focus(
+                                      autofocus: index == 0,
+                                      onFocusChange: (hasFocus) {
+                                        if (hasFocus) {
+                                          setState(() => _focusedHomeIndex = index);
+                                        } else if (_focusedHomeIndex == index) {
+                                          setState(() => _focusedHomeIndex = null);
                                         }
                                       },
-                                      child: ShowCard(
-                                        model: showModels[index],
+                                      onKeyEvent: (node, event) {
+                                        if (event is KeyDownEvent &&
+                                            (event.logicalKey ==
+                                                    LogicalKeyboardKey.enter ||
+                                                event.logicalKey ==
+                                                    LogicalKeyboardKey.select)) {
+                                          _openHomeCategory(index, items, channelObjs);
+                                          return KeyEventResult.handled;
+                                        }
+                                        return KeyEventResult.ignored;
+                                      },
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _openHomeCategory(index, items, channelObjs),
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 120),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(22),
+                                            border: _focusedHomeIndex == index
+                                                ? Border.all(
+                                                    color:
+                                                        TeveTheme.logoLightColor,
+                                                    width: 3)
+                                                : null,
+                                          ),
+                                          child: ShowCard(
+                                            model: showModels[index],
+                                          ),
+                                        ),
                                       ),
                                     )),
                                   ));
