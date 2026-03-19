@@ -15,6 +15,7 @@ class Player extends StatefulWidget {
 
 class _PlayerState extends State<Player> {
   var betterPlayerConfiguration = BetterPlayerConfiguration(
+    autoPlay: true,
     controlsConfiguration: BetterPlayerControlsConfiguration(
       textColor: Colors.white,
       iconsColor: Colors.white,
