@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable, avoid_print, non_constant_identifier_names
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:teve/Home/models/channel_model.dart';
 import 'package:teve/Player/screens/channels_screen.dart';
 import 'package:teve/Utils/constants.dart';
@@ -108,6 +109,31 @@ class _SelectScreenState extends State<SelectScreen> {
             )
           ]));
     })));
+  }
+
+  Widget _remoteActionButton({
+    required Widget child,
+    required VoidCallback onPressed,
+    bool autofocus = false,
+    Color? color,
+  }) {
+    return Focus(
+      autofocus: autofocus,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter)) {
+          onPressed();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: color),
+        onPressed: onPressed,
+        child: child,
+      ),
+    );
   }
 
   @override
@@ -296,9 +322,8 @@ class _SelectScreenState extends State<SelectScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: TeveTheme.logoLightColor),
+                      _remoteActionButton(
+                        color: TeveTheme.logoLightColor,
                         onPressed: () {
                           final prev = currentIndex > 0 ? currentIndex - 1 : 0;
                           buttonCarouselController.animateToPage(prev);
@@ -307,18 +332,17 @@ class _SelectScreenState extends State<SelectScreen> {
                         child: const Icon(Icons.arrow_back, size: 22),
                       ),
                       const SizedBox(width: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: TeveTheme.logoDarkColor),
+                      _remoteActionButton(
+                        autofocus: true,
+                        color: TeveTheme.logoDarkColor,
                         onPressed: () => _openCountry(countries[currentIndex]),
                         child: Text('Select',
                             style: TeveTheme.appText(
                                 size: 14, weight: FontWeight.w600)),
                       ),
                       const SizedBox(width: 10),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: TeveTheme.logoLightColor),
+                      _remoteActionButton(
+                        color: TeveTheme.logoLightColor,
                         onPressed: () {
                           final next = currentIndex < countries.length - 1
                               ? currentIndex + 1

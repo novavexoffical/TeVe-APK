@@ -161,12 +161,23 @@ class _ChannelCardState extends State<ChannelCard> {
           ),
           Align(
               alignment: Alignment.topRight,
-              child: IconButton(
-                icon: Icon(
-                  Icons.more_vert,
-                  color: TeveTheme.whiteColor,
+              child: Focus(
+                onKeyEvent: (node, event) {
+                  if (event is KeyDownEvent &&
+                      (event.logicalKey == LogicalKeyboardKey.enter ||
+                          event.logicalKey == LogicalKeyboardKey.select)) {
+                    widget.onFav();
+                    return KeyEventResult.handled;
+                  }
+                  return KeyEventResult.ignored;
+                },
+                child: IconButton(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: TeveTheme.whiteColor,
+                  ),
+                  onPressed: widget.onFav,
                 ),
-                onPressed: widget.onFav,
               )),
         ],
       ),

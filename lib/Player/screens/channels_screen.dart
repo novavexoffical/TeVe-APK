@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable, unused_element
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:lottie/lottie.dart';
 import 'package:teve/Home/models/channel_model.dart';
@@ -31,6 +32,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
   bool playableOnly = false;
   bool listView = false;
   late List<String> categories;
+  final Set<String> _blockedStreamKeys = <String>{};
 
   @override
   void initState() {
@@ -47,14 +49,69 @@ class _ChannelScreenState extends State<ChannelScreen> {
     categories.insert(0, 'All');
   }
 
+  String _channelKey(ChannelModel channel) {
+    final name = channel.name ?? 'unknown';
+    final url = (channel.url ?? '').trim();
+    return '$name|$url';
+  }
+
+  bool _hasStream(ChannelModel channel) {
+    return channel.url != null && channel.url!.trim().isNotEmpty;
+  }
+
+  bool _isBlocked(ChannelModel channel) {
+    return _blockedStreamKeys.contains(_channelKey(channel));
+  }
+
+  bool _isPlayable(ChannelModel channel) {
+    return _hasStream(channel) && !_isBlocked(channel);
+  }
+
+  void _showToast(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          text,
+          style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
+        ),
+        backgroundColor: TeveTheme.slightBlue,
+      ),
+    );
+  }
+
+  void _markBlocked(ChannelModel channel) {
+    setState(() => _blockedStreamKeys.add(_channelKey(channel)));
+    _showToast('Stream marked blocked. It is excluded from Playable only.');
+  }
+
+  void _unblock(ChannelModel channel) {
+    setState(() => _blockedStreamKeys.remove(_channelKey(channel)));
+    _showToast('Stream unblocked.');
+  }
+
+  void _openPlayer(ChannelModel channel) {
+    if (!_isPlayable(channel)) {
+      if (_isBlocked(channel)) {
+        _showToast('This stream is marked blocked.');
+      } else {
+        _showToast('No playable stream found for this channel yet.');
+      }
+      return;
+    }
+
+    final streamUrl = channel.url!.trim();
+    Navigator.push(context, MaterialPageRoute(builder: (_) {
+      return Player(video_url: streamUrl);
+    }));
+  }
+
   List<ChannelModel> get filteredModels {
     return widget.models.where((m) {
       final categoryMatch = selectedCategory == 'All' ||
           (m.categories != null &&
               m.categories!.isNotEmpty &&
               m.categories![0].name == selectedCategory);
-      final playableMatch =
-          !playableOnly || (m.url != null && m.url!.trim().isNotEmpty);
+      final playableMatch = !playableOnly || _isPlayable(m);
       return categoryMatch && playableMatch;
     }).toList();
   }
@@ -88,6 +145,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
+                      autofocus: index == 0,
                       label: Text(cat),
                       selected: selected,
                       onSelected: (_) {
@@ -126,12 +184,21 @@ class _ChannelScreenState extends State<ChannelScreen> {
                     selectedColor: TeveTheme.logoLightColor,
                     backgroundColor: TeveTheme.slightDarkBlue,
                   ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _blockedStreamKeys.isEmpty
+                        ? 'Blocked: 0'
+                        : 'Blocked: ${_blockedStreamKeys.length}',
+                    style: TeveTheme.appText(size: 11, weight: FontWeight.w500),
+                  ),
                   const Spacer(),
                   IconButton(
                     tooltip: listView ? 'Grid view' : 'List view',
                     onPressed: () => setState(() => listView = !listView),
                     icon: Icon(
-                      listView ? Icons.grid_view_rounded : Icons.view_list_rounded,
+                      listView
+                          ? Icons.grid_view_rounded
+                          : Icons.view_list_rounded,
                       color: TeveTheme.whiteColor,
                     ),
                   ),
@@ -168,64 +235,84 @@ class _ChannelScreenState extends State<ChannelScreen> {
                           itemCount: filteredModels.length,
                           itemBuilder: (context, index) {
                             final channel = filteredModels[index];
-                            final streamUrl = channel.url;
-                            final isPlayable =
-                                streamUrl != null && streamUrl.trim().isNotEmpty;
-                            return Card(
-                              color: TeveTheme.slightDarkBlue,
-                              child: ListTile(
-                                autofocus: index == 0,
-                                onTap: () {
-                                  if (!isPlayable) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          "No playable stream found for this channel yet.",
-                                          style: TeveTheme.appText(
-                                              size: 12,
-                                              weight: FontWeight.w500),
-                                        ),
-                                        backgroundColor: TeveTheme.slightBlue,
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (_) {
-                                    return Player(video_url: streamUrl);
-                                  }));
-                                },
-                                leading: Icon(
-                                  isPlayable
-                                      ? Icons.play_circle_fill
-                                      : Icons.info_outline,
-                                  color: isPlayable
-                                      ? Colors.greenAccent
-                                      : Colors.orangeAccent,
-                                ),
-                                title: Text(
-                                  channel.name ?? 'Unknown',
-                                  style: TeveTheme.appText(
-                                      size: 14, weight: FontWeight.w600),
-                                ),
-                                subtitle: Text(
-                                  channel.categories!.isNotEmpty
-                                      ? channel.categories![0].name ?? 'General'
-                                      : 'General',
-                                  style: TeveTheme.appText(
-                                      size: 11,
-                                      weight: FontWeight.w500,
-                                      color: Colors.white70),
-                                ),
-                                trailing: IconButton(
-                                  onPressed: () => showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        _buildPopupDialog(context,
-                                            model: channel),
+                            final isPlayable = _isPlayable(channel);
+                            final isBlocked = _isBlocked(channel);
+                            return Focus(
+                              autofocus: index == 0,
+                              onKeyEvent: (node, event) {
+                                if (event is KeyDownEvent &&
+                                    (event.logicalKey ==
+                                            LogicalKeyboardKey.enter ||
+                                        event.logicalKey ==
+                                            LogicalKeyboardKey.select)) {
+                                  _openPlayer(channel);
+                                  return KeyEventResult.handled;
+                                }
+                                return KeyEventResult.ignored;
+                              },
+                              child: Card(
+                                color: TeveTheme.slightDarkBlue,
+                                child: ListTile(
+                                  onTap: () => _openPlayer(channel),
+                                  leading: Icon(
+                                    isBlocked
+                                        ? Icons.block
+                                        : isPlayable
+                                            ? Icons.play_circle_fill
+                                            : Icons.info_outline,
+                                    color: isBlocked
+                                        ? Colors.redAccent
+                                        : isPlayable
+                                            ? Colors.greenAccent
+                                            : Colors.orangeAccent,
                                   ),
-                                  icon: const Icon(Icons.more_vert,
-                                      color: Colors.white),
+                                  title: Text(
+                                    channel.name ?? 'Unknown',
+                                    style: TeveTheme.appText(
+                                        size: 14, weight: FontWeight.w600),
+                                  ),
+                                  subtitle: Text(
+                                    isBlocked
+                                        ? 'Marked blocked'
+                                        : (channel.categories != null &&
+                                                channel.categories!.isNotEmpty
+                                            ? channel.categories![0].name ??
+                                                'General'
+                                            : 'General'),
+                                    style: TeveTheme.appText(
+                                        size: 11,
+                                        weight: FontWeight.w500,
+                                        color: Colors.white70),
+                                  ),
+                                  trailing: PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'fav') {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) =>
+                                              _buildPopupDialog(context,
+                                                  model: channel),
+                                        );
+                                      } else if (value == 'block') {
+                                        _markBlocked(channel);
+                                      } else if (value == 'unblock') {
+                                        _unblock(channel);
+                                      }
+                                    },
+                                    itemBuilder: (ctx) => [
+                                      const PopupMenuItem(
+                                          value: 'fav',
+                                          child: Text('Add to favorites')),
+                                      if (!isBlocked)
+                                        const PopupMenuItem(
+                                            value: 'block',
+                                            child: Text('Mark stream blocked')),
+                                      if (isBlocked)
+                                        const PopupMenuItem(
+                                            value: 'unblock',
+                                            child: Text('Unblock stream')),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
@@ -252,8 +339,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                   horizontalOffset: 80.0,
                                   child: FadeInAnimation(
                                     child: ChannelCard(
-                                        isPlayable: channel.url != null &&
-                                            channel.url!.trim().isNotEmpty,
+                                        isPlayable: _isPlayable(channel),
                                         onFav: () {
                                           showDialog(
                                             context: context,
@@ -263,47 +349,31 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                           );
                                         },
                                         onTap: () {
-                                          final streamUrl = channel.url;
-                                          if (streamUrl == null ||
-                                              streamUrl.trim().isEmpty) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  "No playable stream found for this channel yet.",
-                                                  style: TeveTheme.appText(
-                                                      size: 12,
-                                                      weight: FontWeight.w500),
-                                                ),
-                                                backgroundColor:
-                                                    TeveTheme.slightBlue,
-                                              ),
-                                            );
-                                            return;
-                                          }
-
-                                          Navigator.push(context,
-                                              MaterialPageRoute(builder: (_) {
-                                            return Player(video_url: streamUrl);
-                                          }));
+                                          _openPlayer(channel);
                                         },
                                         isLive: widget.isLive,
                                         model: ChannelCardModel(
                                             channel_category: channel
-                                                    .categories!.isNotEmpty
+                                                        .categories !=
+                                                    null &&
+                                                channel.categories!.isNotEmpty
                                                 ? channel.categories![0].name!
-                                                : "Entertainment",
-                                            channel_name: channel.name!,
-                                            code: channel.countries!.isNotEmpty
+                                                : 'Entertainment',
+                                            channel_name:
+                                                channel.name ?? 'Unknown',
+                                            code: channel.countries != null &&
+                                                    channel.countries!.isNotEmpty
                                                 ? channel.countries![0].code!
-                                                : "International",
+                                                : 'International',
                                             image_url: channel.logo != null
                                                 ? channel.logo!
-                                                : "https://i.imgur.com/rzrOS3N.png",
+                                                : 'https://i.imgur.com/rzrOS3N.png',
                                             languages:
-                                                channel.languages!.isNotEmpty
+                                                channel.languages != null &&
+                                                        channel.languages!
+                                                            .isNotEmpty
                                                     ? channel.languages![0].name!
-                                                    : "None")),
+                                                    : 'None')),
                                   ),
                                 ),
                               );
@@ -317,53 +387,69 @@ class _ChannelScreenState extends State<ChannelScreen> {
     );
   }
 
-  Widget _buildPopupDialog(BuildContext context,
-      {required ChannelModel model}) {
+  Widget _buildPopupDialog(BuildContext context, {required ChannelModel model}) {
+    final bool blocked = _isBlocked(model);
+
     return AlertDialog(
       backgroundColor: TeveTheme.slightDarkBlue,
       actionsAlignment: MainAxisAlignment.spaceBetween,
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            "Do you want to add this channel \nto your favorite's?",
+            'Channel options',
             style: TeveTheme.appText(
-                size: 15, weight: FontWeight.w500, color: TeveTheme.whiteColor),
+                size: 16, weight: FontWeight.w700, color: TeveTheme.whiteColor),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            model.name ?? 'Unknown channel',
+            style: TeveTheme.appText(
+                size: 14, weight: FontWeight.w500, color: TeveTheme.whiteColor),
           ),
         ],
       ),
       actions: <Widget>[
         SizedBox(
-          width: 100,
+          width: 110,
           child: ElevatedButton(
             style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
             onPressed: () {
               service.addToFav(context: context, model: model).then((value) {
-                final snackBar = SnackBar(
-                  content: Text(
-                    value,
-                    style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
-                  ),
-                  backgroundColor: (TeveTheme.slightBlue),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                _showToast(value);
                 Navigator.of(context).pop();
               });
             },
-            child: const Text('Yes'),
+            child: const Text('Favorite'),
           ),
         ),
         SizedBox(
-          width: 100,
+          width: 110,
           child: ElevatedButton(
-            style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
+            style: TeveTheme.buttonStyle(
+                backColor: blocked ? Colors.green : Colors.orange),
+            onPressed: () {
+              if (blocked) {
+                _unblock(model);
+              } else {
+                _markBlocked(model);
+              }
+              Navigator.of(context).pop();
+            },
+            child: Text(blocked ? 'Unblock' : 'Blocked'),
+          ),
+        ),
+        SizedBox(
+          width: 90,
+          child: ElevatedButton(
+            style: TeveTheme.buttonStyle(backColor: TeveTheme.logoDarkColor),
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('No'),
+            child: const Text('Close'),
           ),
         ),
       ],
