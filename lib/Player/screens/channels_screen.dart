@@ -403,6 +403,35 @@ class _ChannelScreenState extends State<ChannelScreen> {
     );
   }
 
+  Widget _remoteDialogButton({
+    required Widget child,
+    required VoidCallback onPressed,
+    required Color color,
+    bool autofocus = false,
+    double width = 110,
+  }) {
+    return SizedBox(
+      width: width,
+      child: Focus(
+        autofocus: autofocus,
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent &&
+              (event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.select)) {
+            onPressed();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: ElevatedButton(
+          style: TeveTheme.buttonStyle(backColor: color),
+          onPressed: onPressed,
+          child: child,
+        ),
+      ),
+    );
+  }
+
   Widget _buildPopupDialog(BuildContext context, {required ChannelModel model}) {
     final bool blocked = _isBlocked(model);
 
@@ -429,45 +458,36 @@ class _ChannelScreenState extends State<ChannelScreen> {
         ],
       ),
       actions: <Widget>[
-        SizedBox(
-          width: 110,
-          child: ElevatedButton(
-            autofocus: true,
-            style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
-            onPressed: () {
-              service.addToFav(context: context, model: model).then((value) {
-                _showToast(value);
-                Navigator.of(context).pop();
-              });
-            },
-            child: const Text('Favorite'),
-          ),
-        ),
-        SizedBox(
-          width: 110,
-          child: ElevatedButton(
-            style: TeveTheme.buttonStyle(
-                backColor: blocked ? Colors.green : Colors.orange),
-            onPressed: () {
-              if (blocked) {
-                _unblock(model);
-              } else {
-                _markBlocked(model);
-              }
+        _remoteDialogButton(
+          autofocus: true,
+          color: TeveTheme.logoLightColor,
+          onPressed: () {
+            service.addToFav(context: context, model: model).then((value) {
+              _showToast(value);
               Navigator.of(context).pop();
-            },
-            child: Text(blocked ? 'Unblock' : 'Blocked'),
-          ),
+            });
+          },
+          child: const Text('Favorite'),
         ),
-        SizedBox(
+        _remoteDialogButton(
+          color: blocked ? Colors.green : Colors.orange,
+          onPressed: () {
+            if (blocked) {
+              _unblock(model);
+            } else {
+              _markBlocked(model);
+            }
+            Navigator.of(context).pop();
+          },
+          child: Text(blocked ? 'Unblock' : 'Blocked'),
+        ),
+        _remoteDialogButton(
           width: 90,
-          child: ElevatedButton(
-            style: TeveTheme.buttonStyle(backColor: TeveTheme.logoDarkColor),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Close'),
-          ),
+          color: TeveTheme.logoDarkColor,
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Close'),
         ),
       ],
     );
