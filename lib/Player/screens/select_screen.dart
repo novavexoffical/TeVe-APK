@@ -1,5 +1,4 @@
 // ignore_for_file: must_be_immutable, avoid_print, non_constant_identifier_names
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:teve/Home/models/channel_model.dart';
@@ -29,17 +28,13 @@ class _CountryEntry {
 
   int get totalChannels => channels.length;
 
-  int get playableChannels => channels
-      .where((c) => c.url != null && c.url!.trim().isNotEmpty)
-      .length;
+  int get playableChannels =>
+      channels.where((c) => c.url != null && c.url!.trim().isNotEmpty).length;
 }
 
 class _SelectScreenState extends State<SelectScreen> {
-  int _current = 0;
-  int? _focusedCountryIndex;
   bool _playableOnly = false;
   final TextEditingController _searchController = TextEditingController();
-  final CarouselController buttonCarouselController = CarouselController();
 
   String get _searchQuery => _searchController.text.trim().toLowerCase();
 
@@ -111,27 +106,73 @@ class _SelectScreenState extends State<SelectScreen> {
     })));
   }
 
-  Widget _remoteActionButton({
-    required Widget child,
-    required VoidCallback onPressed,
-    bool autofocus = false,
-    Color? color,
-  }) {
+  Widget _countryCard(_CountryEntry entry, int index) {
     return Focus(
-      autofocus: autofocus,
+      autofocus: index == 0,
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent &&
             (event.logicalKey == LogicalKeyboardKey.select ||
                 event.logicalKey == LogicalKeyboardKey.enter)) {
-          onPressed();
+          _openCountry(entry);
           return KeyEventResult.handled;
         }
         return KeyEventResult.ignored;
       },
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: color),
-        onPressed: onPressed,
-        child: child,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _openCountry(entry),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: TeveTheme.slightDarkBlue,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: TeveTheme.logoDarkColor.withOpacity(0.35),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/images/${entry.code}.png',
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      entry.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TeveTheme.appText(size: 15, weight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${entry.totalChannels} streams · ${entry.playableChannels} playable',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TeveTheme.appText(
+                          size: 12,
+                          weight: FontWeight.w500,
+                          color: TeveTheme.whiteColor.withOpacity(0.75)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right, color: TeveTheme.whiteColor),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -139,14 +180,6 @@ class _SelectScreenState extends State<SelectScreen> {
   @override
   Widget build(BuildContext context) {
     final countries = _filteredCountries;
-    final int currentIndex = countries.isEmpty
-        ? 0
-        : (_current >= countries.length ? countries.length - 1 : _current);
-    final mq = MediaQuery.of(context);
-    final bool isCompactWidth = mq.size.width < 720;
-    final double floatingCounterHeight = isCompactWidth ? 78 : 64;
-    final double controlsBottomOffset =
-        mq.padding.bottom + (isCompactWidth ? floatingCounterHeight + 14 : 14);
 
     return Scaffold(
       appBar: TeveTheme.teveAppBar(child: widget.topWidget),
@@ -161,12 +194,8 @@ class _SelectScreenState extends State<SelectScreen> {
                   colors: [TeveTheme.darkBlue, TeveTheme.slightBlue])),
         ),
         SafeArea(
-          child: Align(
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+          child: Column(
+            children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -174,11 +203,9 @@ class _SelectScreenState extends State<SelectScreen> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
-                        onChanged: (_) => setState(() {
-                          _current = 0;
-                        }),
-                        style: TeveTheme.appText(
-                            size: 14, weight: FontWeight.w500),
+                        onChanged: (_) => setState(() {}),
+                        style:
+                            TeveTheme.appText(size: 14, weight: FontWeight.w500),
                         decoration: TeveTheme.waInputDecoration(
                           hint: 'Search country (e.g. US, India, Brazil)',
                           prefixIcon: Icons.search,
@@ -197,7 +224,6 @@ class _SelectScreenState extends State<SelectScreen> {
                       onSelected: (val) {
                         setState(() {
                           _playableOnly = val;
-                          _current = 0;
                         });
                       },
                       selectedColor: TeveTheme.logoLightColor,
@@ -206,11 +232,9 @@ class _SelectScreenState extends State<SelectScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Expanded(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: countries.isEmpty
+                child: countries.isEmpty
                     ? Center(
                         child: Text(
                           'No countries match your filters',
@@ -218,151 +242,19 @@ class _SelectScreenState extends State<SelectScreen> {
                               TeveTheme.appText(size: 16, weight: FontWeight.w600),
                         ),
                       )
-                    : CarouselSlider.builder(
-                        carouselController: buttonCarouselController,
+                    : ListView.builder(
+                        padding: EdgeInsets.only(
+                          top: 4,
+                          bottom: MediaQuery.of(context).padding.bottom + 88,
+                        ),
                         itemCount: countries.length,
-                        itemBuilder: ((context, index, realIndex) {
-                          final entry = countries[index];
-                          final isCurrent = index == currentIndex;
-
-                          return Column(
-                            children: [
-                              Focus(
-                                onFocusChange: (hasFocus) {
-                                  setState(() {
-                                    if (hasFocus) {
-                                      _focusedCountryIndex = index;
-                                    } else if (_focusedCountryIndex == index) {
-                                      _focusedCountryIndex = null;
-                                    }
-                                  });
-                                },
-                                child: InkWell(
-                                  autofocus: index == 0,
-                                  borderRadius: BorderRadius.circular(70),
-                                  onTap: () {
-                                    setState(() => _current = index);
-                                    _openCountry(entry);
-                                  },
-                                  child: Container(
-                                    height: 120,
-                                    width: 120,
-                                    decoration: (isCurrent ||
-                                            _focusedCountryIndex == index)
-                                        ? BoxDecoration(
-                                            border: Border.all(
-                                                color: TeveTheme.whiteColor,
-                                                width: 5),
-                                            borderRadius:
-                                                BorderRadius.circular(70))
-                                        : null,
-                                    child: Image.asset(
-                                      "assets/images/${entry.code}.png",
-                                      fit: BoxFit.fill,
-                                      height: 120,
-                                      width: 120,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              isCurrent
-                                  ? Column(
-                                      children: [
-                                        const SizedBox(
-                                          height: 20,
-                                        ),
-                                        Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            SizedBox(
-                                              width: 500,
-                                              child: Text(
-                                                entry.name,
-                                                textAlign: TextAlign.center,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TeveTheme.appText(
-                                                    size: 20,
-                                                    weight: FontWeight.w600),
-                                              ),
-                                            ),
-                                            Text(
-                                              _playableOnly
-                                                  ? "${entry.playableChannels} Playable"
-                                                  : "${entry.totalChannels} Channels · ${entry.playableChannels} Playable",
-                                              style: TeveTheme.appText(
-                                                  size: 15,
-                                                  weight: FontWeight.w500),
-                                            )
-                                          ],
-                                        ),
-                                      ],
-                                    )
-                                  : const SizedBox()
-                            ],
-                          );
-                        }),
-                        options: CarouselOptions(
-                            onPageChanged: (index, reason) {
-                              setState(() {
-                                _current = index;
-                              });
-                            },
-                            aspectRatio: 1,
-                            viewportFraction: 0.2,
-                            autoPlay: false,
-                            enlargeCenterPage: true,
-                            initialPage: currentIndex,
-                            scrollPhysics: const BouncingScrollPhysics())),
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              if (countries.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.only(bottom: controlsBottomOffset),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _remoteActionButton(
-                        color: TeveTheme.logoLightColor,
-                        onPressed: () {
-                          final prev = currentIndex > 0 ? currentIndex - 1 : 0;
-                          buttonCarouselController.animateToPage(prev);
-                          setState(() => _current = prev);
+                        itemBuilder: (context, index) {
+                          return _countryCard(countries[index], index);
                         },
-                        child: const Icon(Icons.arrow_back, size: 22),
                       ),
-                      const SizedBox(width: 10),
-                      _remoteActionButton(
-                        autofocus: true,
-                        color: TeveTheme.logoDarkColor,
-                        onPressed: () => _openCountry(countries[currentIndex]),
-                        child: Text('Select',
-                            style: TeveTheme.appText(
-                                size: 14, weight: FontWeight.w600)),
-                      ),
-                      const SizedBox(width: 10),
-                      _remoteActionButton(
-                        color: TeveTheme.logoLightColor,
-                        onPressed: () {
-                          final next = currentIndex < countries.length - 1
-                              ? currentIndex + 1
-                              : currentIndex;
-                          buttonCarouselController.animateToPage(next);
-                          setState(() => _current = next);
-                        },
-                        child: const Icon(Icons.arrow_forward, size: 22),
-                      ),
-                    ],
-                  ),
-                )
+              ),
             ],
           ),
-        ),
         ),
         SafeArea(
           minimum: const EdgeInsets.only(bottom: 8, right: 8),
@@ -377,7 +269,6 @@ class _SelectScreenState extends State<SelectScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
-                textBaseline: TextBaseline.alphabetic,
                 children: [
                   const Icon(
                     Icons.tv,
@@ -387,7 +278,7 @@ class _SelectScreenState extends State<SelectScreen> {
                     width: 8,
                   ),
                   Text(
-                    "Countries",
+                    'Countries',
                     style: TeveTheme.appText(size: 15, weight: FontWeight.w600),
                   ),
                   const SizedBox(
