@@ -6,8 +6,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teve/Home/models/categories_model.dart';
 import 'package:teve/Home/models/channel_model.dart';
+import 'package:teve/Home/models/countries_model.dart';
 import 'package:teve/Home/models/fav_model.dart';
+import 'package:teve/Home/models/languages_model.dart';
 import 'package:teve/Utils/teve_theme.dart';
 import 'package:teve/common/api.dart';
 
@@ -38,7 +41,17 @@ class HomeService {
 
           final List<dynamic> payload =
               jsonDecode(response.body) as List<dynamic>;
-          return payload.map((e) => ChannelModel.fromJson(e)).toList();
+          final channels = payload
+              .whereType<Map<String, dynamic>>()
+              .map(_channelFromAnyJson)
+              .whereType<ChannelModel>()
+              .toList();
+
+          if (channels.isNotEmpty) {
+            return channels;
+          }
+
+          lastError = "Parsed 0 channels from ${uri.host}";
         } on TimeoutException {
           lastError = "Request timed out from ${uri.host}";
           if (attempt == 1) {
@@ -56,6 +69,61 @@ class HomeService {
     );
     debugPrint("fetchChannels failed: $lastError");
     return [];
+  }
+
+  ChannelModel? _channelFromAnyJson(Map<String, dynamic> json) {
+    try {
+      final categoriesRaw = json['categories'];
+      final countriesRaw = json['countries'];
+      final languagesRaw = json['languages'];
+      final country = json['country'];
+
+      final categories = <Categories>[];
+      if (categoriesRaw is List) {
+        for (final item in categoriesRaw) {
+          if (item is Map<String, dynamic>) {
+            categories.add(Categories.fromJson(item));
+          } else if (item is String && item.isNotEmpty) {
+            categories.add(Categories(name: item, slug: item));
+          }
+        }
+      }
+
+      final countries = <Countries>[];
+      if (countriesRaw is List) {
+        for (final item in countriesRaw) {
+          if (item is Map<String, dynamic>) {
+            countries.add(Countries.fromJson(item));
+          } else if (item is String && item.isNotEmpty) {
+            countries.add(Countries(name: item, code: item));
+          }
+        }
+      } else if (country is String && country.isNotEmpty) {
+        countries.add(Countries(name: country, code: country));
+      }
+
+      final languages = <Languages>[];
+      if (languagesRaw is List) {
+        for (final item in languagesRaw) {
+          if (item is Map<String, dynamic>) {
+            languages.add(Languages.fromJson(item));
+          } else if (item is String && item.isNotEmpty) {
+            languages.add(Languages(name: item, code: item));
+          }
+        }
+      }
+
+      return ChannelModel(
+        name: (json['name'] ?? '').toString(),
+        logo: (json['logo'] ?? json['logo_url'])?.toString(),
+        url: (json['url'] ?? json['stream'] ?? json['stream_url'])?.toString(),
+        categories: categories,
+        countries: countries,
+        languages: languages,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<List<FavModel>> fetchFavChannels(BuildContext context) async {
