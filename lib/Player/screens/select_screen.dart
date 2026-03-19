@@ -97,7 +97,7 @@ class _SelectScreenState extends State<SelectScreen> {
     final saved = pref.getStringList(_visibleCountriesKey);
     if (!mounted) return;
     if (saved == null || saved.isEmpty) {
-      setState(() => _visibleCountryCodes = null);
+      setState(() => _visibleCountryCodes = {'us', 'pl'});
       return;
     }
     setState(() {
