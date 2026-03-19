@@ -240,13 +240,26 @@ class _ChannelScreenState extends State<ChannelScreen> {
                             return Focus(
                               autofocus: index == 0,
                               onKeyEvent: (node, event) {
-                                if (event is KeyDownEvent &&
-                                    (event.logicalKey ==
-                                            LogicalKeyboardKey.enter ||
-                                        event.logicalKey ==
-                                            LogicalKeyboardKey.select)) {
-                                  _openPlayer(channel);
-                                  return KeyEventResult.handled;
+                                if (event is KeyDownEvent) {
+                                  if (event.logicalKey ==
+                                          LogicalKeyboardKey.enter ||
+                                      event.logicalKey ==
+                                          LogicalKeyboardKey.select) {
+                                    _openPlayer(channel);
+                                    return KeyEventResult.handled;
+                                  }
+                                  if (event.logicalKey ==
+                                          LogicalKeyboardKey.contextMenu ||
+                                      event.logicalKey ==
+                                          LogicalKeyboardKey.info) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) =>
+                                          _buildPopupDialog(context,
+                                              model: channel),
+                                    );
+                                    return KeyEventResult.handled;
+                                  }
                                 }
                                 return KeyEventResult.ignored;
                               },
@@ -284,34 +297,37 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                         weight: FontWeight.w500,
                                         color: Colors.white70),
                                   ),
-                                  trailing: PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      if (value == 'fav') {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              _buildPopupDialog(context,
-                                                  model: channel),
-                                        );
-                                      } else if (value == 'block') {
-                                        _markBlocked(channel);
-                                      } else if (value == 'unblock') {
-                                        _unblock(channel);
-                                      }
-                                    },
-                                    itemBuilder: (ctx) => [
-                                      const PopupMenuItem(
-                                          value: 'fav',
-                                          child: Text('Add to favorites')),
-                                      if (!isBlocked)
+                                  trailing: ExcludeFocus(
+                                    child: PopupMenuButton<String>(
+                                      onSelected: (value) {
+                                        if (value == 'fav') {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) =>
+                                                _buildPopupDialog(context,
+                                                    model: channel),
+                                          );
+                                        } else if (value == 'block') {
+                                          _markBlocked(channel);
+                                        } else if (value == 'unblock') {
+                                          _unblock(channel);
+                                        }
+                                      },
+                                      itemBuilder: (ctx) => [
                                         const PopupMenuItem(
-                                            value: 'block',
-                                            child: Text('Mark stream blocked')),
-                                      if (isBlocked)
-                                        const PopupMenuItem(
-                                            value: 'unblock',
-                                            child: Text('Unblock stream')),
-                                    ],
+                                            value: 'fav',
+                                            child: Text('Add to favorites')),
+                                        if (!isBlocked)
+                                          const PopupMenuItem(
+                                              value: 'block',
+                                              child:
+                                                  Text('Mark stream blocked')),
+                                        if (isBlocked)
+                                          const PopupMenuItem(
+                                              value: 'unblock',
+                                              child: Text('Unblock stream')),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

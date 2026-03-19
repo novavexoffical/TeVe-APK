@@ -32,11 +32,17 @@ class _ChannelCardState extends State<ChannelCard> {
     return Focus(
       onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
       onKeyEvent: (node, event) {
-        if (event is KeyDownEvent &&
-            (event.logicalKey == LogicalKeyboardKey.enter ||
-                event.logicalKey == LogicalKeyboardKey.select)) {
-          widget.onTap();
-          return KeyEventResult.handled;
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.select) {
+            widget.onTap();
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.contextMenu ||
+              event.logicalKey == LogicalKeyboardKey.info) {
+            widget.onFav();
+            return KeyEventResult.handled;
+          }
         }
         return KeyEventResult.ignored;
       },
@@ -105,16 +111,7 @@ class _ChannelCardState extends State<ChannelCard> {
                   ],
                 ),
               ),
-              Focus(
-                onKeyEvent: (node, event) {
-                  if (event is KeyDownEvent &&
-                      (event.logicalKey == LogicalKeyboardKey.enter ||
-                          event.logicalKey == LogicalKeyboardKey.select)) {
-                    widget.onFav();
-                    return KeyEventResult.handled;
-                  }
-                  return KeyEventResult.ignored;
-                },
+              ExcludeFocus(
                 child: IconButton(
                   icon: const Icon(Icons.more_vert, color: TeveTheme.whiteColor),
                   onPressed: widget.onFav,
