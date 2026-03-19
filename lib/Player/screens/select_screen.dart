@@ -319,7 +319,7 @@ class _SelectScreenState extends State<SelectScreen> {
               if (countries.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 14),
+                      bottom: MediaQuery.of(context).padding.bottom + 86),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
