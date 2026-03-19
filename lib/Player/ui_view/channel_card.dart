@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable, prefer_const_constructors, sized_box_for_whitespace
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:teve/Player/models/channel_card_model.dart';
 import 'package:teve/Utils/teve_theme.dart';
@@ -24,16 +25,38 @@ class ChannelCard extends StatefulWidget {
 }
 
 class _ChannelCardState extends State<ChannelCard> {
+  bool _isFocused = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 200,
       child: Stack(
         children: [
-          GestureDetector(
-            onTap: widget.onTap,
-            child: Column(children: [
+          Focus(
+            onFocusChange: (hasFocus) {
+              setState(() => _isFocused = hasFocus);
+            },
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent &&
+                  (event.logicalKey == LogicalKeyboardKey.enter ||
+                      event.logicalKey == LogicalKeyboardKey.select)) {
+                widget.onTap();
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: GestureDetector(
+              onTap: widget.onTap,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 120),
+                decoration: BoxDecoration(
+                  border: _isFocused
+                      ? Border.all(color: TeveTheme.logoLightColor, width: 3)
+                      : null,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Column(children: [
               Container(
                 width: 200,
                 height: 150,
@@ -114,6 +137,8 @@ class _ChannelCardState extends State<ChannelCard> {
               )
             ]),
           ),
+        ),
+      ),
           Positioned(
             top: 8,
             left: 8,
