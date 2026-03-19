@@ -16,15 +16,18 @@ import 'package:teve/common/api.dart';
 
 class HomeService {
   ApiService apiService = ApiService();
+  static const String _channelsCacheKey = 'channels_cache_v1';
 
   static const List<String> _channelSources = [
     "https://iptv-org.github.io/api/channels.json",
     "https://cdn.jsdelivr.net/gh/iptv-org/iptv@master/channels.json",
+    "https://raw.githubusercontent.com/iptv-org/iptv/master/channels.json",
   ];
 
   static const List<String> _streamSources = [
     "https://iptv-org.github.io/api/streams.json",
     "https://cdn.jsdelivr.net/gh/iptv-org/iptv@master/streams.json",
+    "https://raw.githubusercontent.com/iptv-org/iptv/master/streams.json",
   ];
 
   Future<List<ChannelModel>> fetchChannels(BuildContext context) async {
@@ -60,6 +63,8 @@ class HomeService {
               .toList();
 
           if (channels.isNotEmpty) {
+            final pref = await SharedPreferences.getInstance();
+            await pref.setString(_channelsCacheKey, jsonEncode(payload));
             return channels;
           }
 
@@ -73,6 +78,27 @@ class HomeService {
           lastError = e;
         }
       }
+    }
+
+    final pref = await SharedPreferences.getInstance();
+    final cachedRaw = pref.getString(_channelsCacheKey);
+    if (cachedRaw != null && cachedRaw.isNotEmpty) {
+      try {
+        final List<dynamic> payload = jsonDecode(cachedRaw) as List<dynamic>;
+        final cachedChannels = payload
+            .whereType<Map<String, dynamic>>()
+            .map((json) => _channelFromAnyJson(
+                  json,
+                  streamByChannelId: streamByChannelId,
+                  streamByTitle: streamByTitle,
+                ))
+            .whereType<ChannelModel>()
+            .toList();
+        if (cachedChannels.isNotEmpty) {
+          debugPrint('fetchChannels fallback: using cached channels');
+          return cachedChannels;
+        }
+      } catch (_) {}
     }
 
     TeveTheme.moveToErrorPage(
