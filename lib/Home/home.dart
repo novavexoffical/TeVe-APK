@@ -11,7 +11,6 @@ import 'package:teve/Home/models/channel_model.dart';
 import 'package:teve/Home/screens/fav_screen.dart';
 import 'package:teve/Home/service/home_service.dart';
 import 'package:teve/Home/ui_view/show_card.dart';
-import 'package:teve/Login/login.dart';
 import 'package:teve/Player/screens/channels_screen.dart';
 import 'package:teve/Player/screens/select_screen.dart';
 import 'package:teve/Utils/constants.dart';
@@ -68,16 +67,6 @@ class _HomeState extends State<Home> {
       child: Scaffold(
         appBar: TeveTheme.teveAppBar(
             onFav: () async {
-              SharedPreferences pref = await SharedPreferences.getInstance();
-              final session = pref.getString('session');
-              if (session == null || session == 'guest') {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Sign in required for favorites'),
-                ));
-                return;
-              }
-
               Navigator.push(context, MaterialPageRoute(builder: (_) {
                 return const FavScreen();
               }));
@@ -267,7 +256,7 @@ class _HomeState extends State<Home> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            "Are you sure you want to LogOut?",
+            "Clear all locally saved favorites?",
             style: TeveTheme.appText(
                 size: 15, weight: FontWeight.w500, color: TeveTheme.whiteColor),
           ),
@@ -279,15 +268,15 @@ class _HomeState extends State<Home> {
           child: ElevatedButton(
             style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
             onPressed: () async {
-              SharedPreferences preferences =
-                  await SharedPreferences.getInstance();
-              preferences.remove("session").then((value) {
-                return Navigator.push(context, MaterialPageRoute(builder: (_) {
-                  return const Login();
-                }));
-              });
+              final preferences = await SharedPreferences.getInstance();
+              await preferences.remove('local_favorites');
+              if (!mounted) return;
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Local favorites cleared')),
+              );
             },
-            child: const Text('Yes'),
+            child: const Text('Clear'),
           ),
         ),
         SizedBox(

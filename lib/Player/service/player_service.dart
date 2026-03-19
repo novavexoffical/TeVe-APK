@@ -1,28 +1,37 @@
 // ignore_for_file: use_build_context_synchronously, prefer_final_fields
 
 import 'package:flutter/material.dart';
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
-import 'package:teve/common/api.dart';
 
 class PlayerService {
-  ApiService _service = ApiService();
+  static const String _favoritesKey = 'local_favorites';
 
   Future<String> addToFav(
       {required BuildContext context, required ChannelModel model}) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    final session = pref.getString('session');
-    if (session == null || session == 'guest') {
-      return "Sign in required to use favorites";
+    final pref = await SharedPreferences.getInstance();
+    final raw = pref.getString(_favoritesKey);
+    final List<dynamic> decoded =
+        raw == null || raw.isEmpty ? [] : (jsonDecode(raw) as List<dynamic>);
+
+    final payload = model.toJson();
+    final name = (payload['channel_name'] ?? '').toString().trim();
+    final link = (payload['stream_link'] ?? '').toString().trim();
+
+    final exists = decoded.any((e) {
+      if (e is! Map) return false;
+      return (e['channel_name'] ?? '').toString().trim() == name &&
+          (e['stream_link'] ?? '').toString().trim() == link;
+    });
+
+    if (exists) {
+      return "This channel is already in your favorites.";
     }
 
-    String endpoint = "fav/add";
-    var response =
-        await _service.postHeaderData(endpoint, model.toJson(), isDb: true);
-    if (response.isLeft) {
-      return "This Channel is already in your favorite's.";
-    } else {
-      return "Added to favorite's";
-    }
+    decoded.add(payload);
+    await pref.setString(_favoritesKey, jsonEncode(decoded));
+    return "Added to favorites";
   }
 }

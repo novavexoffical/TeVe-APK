@@ -191,37 +191,46 @@ class HomeService {
     }
   }
 
-  Future<List<FavModel>> fetchFavChannels(BuildContext context) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    final session = pref.getString('session');
-    if (session == null || session == 'guest') {
-      return [];
-    }
+  static const String _favoritesKey = 'local_favorites';
 
-    String endpoint = "fav/";
-    var response = await apiService.getAllData(endpoint, isDb: true);
-    if (response.isLeft) {
+  Future<List<FavModel>> fetchFavChannels(BuildContext context) async {
+    final pref = await SharedPreferences.getInstance();
+    final raw = pref.getString(_favoritesKey);
+    if (raw == null || raw.isEmpty) return [];
+
+    try {
+      final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map((e) => FavModel.fromJson(e))
+          .toList();
+    } catch (_) {
       return [];
-    } else {
-      return response.right.map((e) => FavModel.fromJson(e)).toList();
     }
   }
 
   Future<String> deleteFavChannel(
       {required BuildContext context, required FavModel model}) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    final session = pref.getString('session');
-    if (session == null || session == 'guest') {
-      return "Sign in to manage favorites";
+    final pref = await SharedPreferences.getInstance();
+    final raw = pref.getString(_favoritesKey);
+    if (raw == null || raw.isEmpty) {
+      return "Nothing to remove";
     }
 
-    String endpoint = "fav/delete";
-    var response =
-        await apiService.deleteData(endpoint, model.toJson(), isDb: true);
-    if (response.isLeft) {
+    try {
+      final List<dynamic> decoded = jsonDecode(raw) as List<dynamic>;
+      decoded.removeWhere((e) {
+        if (e is! Map) return false;
+        return (e['channel_name'] ?? '').toString().trim() ==
+                (model.channelName ?? '').trim() &&
+            (e['stream_link'] ?? '').toString().trim() ==
+                (model.streamLink ?? '').trim();
+      });
+      await pref.setString(_favoritesKey, jsonEncode(decoded));
+      return "Removed from favorites";
+    } catch (_) {
       return "Cannot delete this channel";
-    } else {
-      return "Removed from your favorite's";
     }
   }
 }
+
