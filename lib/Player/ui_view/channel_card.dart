@@ -11,25 +11,32 @@ class ChannelCard extends StatefulWidget {
     super.key,
     required this.model,
     required this.onFav,
-    required this.onTap,
     this.isLive = false,
     this.isPlayable = false,
     this.isBlocked = false,
+    required this.onTap,
   });
 
-  final ChannelCardModel model;
-  final VoidCallback onTap;
-  final bool isLive;
-  final bool isPlayable;
-  final bool isBlocked;
-  final VoidCallback onFav;
+  ChannelCardModel model;
+  VoidCallback onTap;
+  bool isLive;
+  bool isPlayable;
+  bool isBlocked;
+  VoidCallback onFav;
 
   @override
   State<ChannelCard> createState() => _ChannelCardState();
 }
 
 class _ChannelCardState extends State<ChannelCard> {
-  bool _focused = false;
+  bool _isFocused = false;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,16 +45,19 @@ class _ChannelCardState extends State<ChannelCard> {
       child: Stack(
         children: [
           Focus(
+            focusNode: _focusNode,
             onFocusChange: (hasFocus) {
-              setState(() => _focused = hasFocus);
+              setState(() => _isFocused = hasFocus);
             },
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(25),
-              child: AnimatedContainer(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(25),
+                onTap: widget.onTap,
+                child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),
                 decoration: BoxDecoration(
-                  border: _focused
+                  border: _isFocused
                       ? Border.all(color: TeveTheme.logoLightColor, width: 3)
                       : null,
                   borderRadius: BorderRadius.circular(25),
@@ -58,18 +68,15 @@ class _ChannelCardState extends State<ChannelCard> {
                       width: 200,
                       height: 150,
                       decoration: BoxDecoration(
-                        color: TeveTheme.slightDarkBlue,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(25),
-                          topRight: Radius.circular(25),
-                        ),
-                      ),
+                          color: TeveTheme.slightDarkBlue,
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(25),
+                              topRight: Radius.circular(25))),
                       child: Center(
                         child: ClipRRect(
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(25),
-                            topRight: Radius.circular(25),
-                          ),
+                              topLeft: Radius.circular(25),
+                              topRight: Radius.circular(25)),
                           child: CachedNetworkImage(
                             imageUrl: widget.model.image_url,
                             imageBuilder: (context, imageProvider) => Container(
@@ -82,9 +89,7 @@ class _ChannelCardState extends State<ChannelCard> {
                             ),
                             placeholder: (context, url) =>
                                 LoadingAnimationWidget.fourRotatingDots(
-                              color: TeveTheme.whiteColor,
-                              size: 20,
-                            ),
+                                    color: TeveTheme.whiteColor, size: 20),
                             errorWidget: (context, url, error) => Icon(
                               Icons.error,
                               color: Colors.white,
@@ -96,25 +101,22 @@ class _ChannelCardState extends State<ChannelCard> {
                     ),
                     Expanded(
                       child: Container(
-                        width: 200,
                         padding:
                             EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                        width: 200,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: const FractionalOffset(0.0, 0.0),
-                            end: const FractionalOffset(1.0, 0.0),
-                            stops: const [0.0, 1.0],
-                            tileMode: TileMode.clamp,
-                            colors: [
-                              TeveTheme.logoDarkColor,
-                              TeveTheme.logoDarkColor.withOpacity(0.4),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(25),
-                            bottomRight: Radius.circular(25),
-                          ),
-                        ),
+                            gradient: LinearGradient(
+                                begin: const FractionalOffset(0.0, 0.0),
+                                end: const FractionalOffset(1.0, 0.0),
+                                stops: const [0.0, 1.0],
+                                tileMode: TileMode.clamp,
+                                colors: [
+                                  TeveTheme.logoDarkColor,
+                                  TeveTheme.logoDarkColor.withOpacity(0.4)
+                                ]),
+                            borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(25),
+                                bottomRight: Radius.circular(25))),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -124,9 +126,7 @@ class _ChannelCardState extends State<ChannelCard> {
                                 widget.model.channel_name,
                                 overflow: TextOverflow.ellipsis,
                                 style: TeveTheme.appText(
-                                  size: 15,
-                                  weight: FontWeight.w600,
-                                ),
+                                    size: 15, weight: FontWeight.w600),
                               ),
                             ),
                             Text(
@@ -135,15 +135,15 @@ class _ChannelCardState extends State<ChannelCard> {
                                   : widget.model.languages,
                               overflow: TextOverflow.ellipsis,
                               style: TeveTheme.appText(
-                                size: 12,
-                                weight: FontWeight.w500,
-                                color: TeveTheme.whiteColor.withOpacity(0.7),
-                              ),
+                                  size: 12,
+                                  weight: FontWeight.w500,
+                                  color:
+                                      TeveTheme.whiteColor.withOpacity(0.7)),
                             ),
                           ],
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -169,17 +169,19 @@ class _ChannelCardState extends State<ChannelCard> {
                         ? 'Playable'
                         : 'No Stream',
                 style: TeveTheme.appText(
-                  size: 10,
-                  weight: FontWeight.w700,
-                  color: TeveTheme.whiteColor,
-                ),
+                    size: 10,
+                    weight: FontWeight.w700,
+                    color: TeveTheme.whiteColor),
               ),
             ),
           ),
           Align(
             alignment: Alignment.topRight,
             child: IconButton(
-              icon: Icon(Icons.more_vert, color: TeveTheme.whiteColor),
+              icon: Icon(
+                Icons.more_vert,
+                color: TeveTheme.whiteColor,
+              ),
               onPressed: widget.onFav,
             ),
           ),
