@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
 import 'package:teve/Player/models/channel_card_model.dart';
 import 'package:teve/Player/player.dart';
@@ -27,12 +28,15 @@ class ChannelScreen extends StatefulWidget {
 }
 
 class _ChannelScreenState extends State<ChannelScreen> {
+  static const String _blockedStreamsKey = 'blocked_streams_v1';
+
   PlayerService service = PlayerService();
   String selectedCategory = 'All';
   bool playableOnly = true;
   bool listView = false;
   late List<String> categories;
   final Set<String> _blockedStreamKeys = <String>{};
+  final Set<String> _favoriteStreamKeys = <String>{};
 
   @override
   void initState() {
@@ -47,6 +51,34 @@ class _ChannelScreenState extends State<ChannelScreen> {
     categories = set.toList()..sort();
     categories.remove('All');
     categories.insert(0, 'All');
+    _loadBlockedStreams();
+    _loadFavoriteStreams();
+  }
+
+  Future<void> _loadBlockedStreams() async {
+    final pref = await SharedPreferences.getInstance();
+    final saved = pref.getStringList(_blockedStreamsKey) ?? <String>[];
+    if (!mounted) return;
+    setState(() {
+      _blockedStreamKeys
+        ..clear()
+        ..addAll(saved);
+    });
+  }
+
+  Future<void> _saveBlockedStreams() async {
+    final pref = await SharedPreferences.getInstance();
+    await pref.setStringList(_blockedStreamsKey, _blockedStreamKeys.toList());
+  }
+
+  Future<void> _loadFavoriteStreams() async {
+    final favorites = await service.getFavoriteKeys();
+    if (!mounted) return;
+    setState(() {
+      _favoriteStreamKeys
+        ..clear()
+        ..addAll(favorites);
+    });
   }
 
   String _channelKey(ChannelModel channel) {
@@ -67,6 +99,10 @@ class _ChannelScreenState extends State<ChannelScreen> {
     return _hasStream(channel) && !_isBlocked(channel);
   }
 
+  bool _isFavorite(ChannelModel channel) {
+    return _favoriteStreamKeys.contains(_channelKey(channel));
+  }
+
   void _showToast(String text) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -79,13 +115,15 @@ class _ChannelScreenState extends State<ChannelScreen> {
     );
   }
 
-  void _markBlocked(ChannelModel channel) {
+  Future<void> _markBlocked(ChannelModel channel) async {
     setState(() => _blockedStreamKeys.add(_channelKey(channel)));
+    await _saveBlockedStreams();
     _showToast('Stream marked blocked. It is excluded from Playable only.');
   }
 
-  void _unblock(ChannelModel channel) {
+  Future<void> _unblock(ChannelModel channel) async {
     setState(() => _blockedStreamKeys.remove(_channelKey(channel)));
+    await _saveBlockedStreams();
     _showToast('Stream unblocked.');
   }
 
@@ -434,6 +472,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
 
   Widget _buildPopupDialog(BuildContext context, {required ChannelModel model}) {
     final bool blocked = _isBlocked(model);
+    final bool isFavorite = _isFavorite(model);
 
     return AlertDialog(
       backgroundColor: TeveTheme.slightDarkBlue,
@@ -461,22 +500,26 @@ class _ChannelScreenState extends State<ChannelScreen> {
         _remoteDialogButton(
           autofocus: true,
           color: TeveTheme.logoLightColor,
-          onPressed: () {
-            service.addToFav(context: context, model: model).then((value) {
-              _showToast(value);
-              Navigator.of(context).pop();
-            });
+          onPressed: () async {
+            final value = isFavorite
+                ? await service.removeFromFav(context: context, model: model)
+                : await service.addToFav(context: context, model: model);
+            await _loadFavoriteStreams();
+            _showToast(value);
+            if (!mounted) return;
+            Navigator.of(context).pop();
           },
-          child: const Text('Favorite'),
+          child: Text(isFavorite ? 'Unfavorite' : 'Favorite'),
         ),
         _remoteDialogButton(
           color: blocked ? Colors.green : Colors.orange,
-          onPressed: () {
+          onPressed: () async {
             if (blocked) {
-              _unblock(model);
+              await _unblock(model);
             } else {
-              _markBlocked(model);
+              await _markBlocked(model);
             }
+            if (!mounted) return;
             Navigator.of(context).pop();
           },
           child: Text(blocked ? 'Unblock' : 'Blocked'),
