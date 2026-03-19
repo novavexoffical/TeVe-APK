@@ -1,6 +1,7 @@
 // ignore_for_file: must_be_immutable, avoid_print, non_constant_identifier_names
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
 import 'package:teve/Player/screens/channels_screen.dart';
 import 'package:teve/Utils/constants.dart';
@@ -33,8 +34,11 @@ class _CountryEntry {
 }
 
 class _SelectScreenState extends State<SelectScreen> {
+  static const String _visibleCountriesKey = 'visible_countries_v1';
+
   bool _playableOnly = false;
   final TextEditingController _searchController = TextEditingController();
+  Set<String>? _visibleCountryCodes;
 
   String get _searchQuery => _searchController.text.trim().toLowerCase();
 
@@ -72,12 +76,159 @@ class _SelectScreenState extends State<SelectScreen> {
 
   List<_CountryEntry> get _filteredCountries {
     return _countryEntries.where((entry) {
+      final visibilityMatch = _visibleCountryCodes == null ||
+          _visibleCountryCodes!.contains(entry.code.toLowerCase());
       final queryMatch = _searchQuery.isEmpty ||
           entry.name.toLowerCase().contains(_searchQuery) ||
           entry.code.toLowerCase().contains(_searchQuery);
       final playableMatch = !_playableOnly || entry.playableChannels > 0;
-      return queryMatch && playableMatch;
+      return visibilityMatch && queryMatch && playableMatch;
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVisibleCountries();
+  }
+
+  Future<void> _loadVisibleCountries() async {
+    final pref = await SharedPreferences.getInstance();
+    final saved = pref.getStringList(_visibleCountriesKey);
+    if (!mounted) return;
+    if (saved == null || saved.isEmpty) {
+      setState(() => _visibleCountryCodes = null);
+      return;
+    }
+    setState(() {
+      _visibleCountryCodes = saved.map((e) => e.toLowerCase()).toSet();
+    });
+  }
+
+  Future<void> _saveVisibleCountries(Set<String>? codes) async {
+    final pref = await SharedPreferences.getInstance();
+    if (codes == null || codes.isEmpty) {
+      await pref.remove(_visibleCountriesKey);
+    } else {
+      await pref.setStringList(_visibleCountriesKey, codes.toList()..sort());
+    }
+  }
+
+  Future<void> _openCountryVisibilitySettings() async {
+    final all = _countryEntries;
+    final initial = _visibleCountryCodes == null
+        ? all.map((e) => e.code.toLowerCase()).toSet()
+        : {..._visibleCountryCodes!};
+    Set<String> temp = {...initial};
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (ctx, setModalState) {
+          return AlertDialog(
+            backgroundColor: TeveTheme.slightDarkBlue,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              'Visible countries',
+              style: TeveTheme.appText(size: 16, weight: FontWeight.w700),
+            ),
+            content: SizedBox(
+              width: 460,
+              height: 420,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => setModalState(() {
+                          temp = all.map((e) => e.code.toLowerCase()).toSet();
+                        }),
+                        child: const Text('All'),
+                      ),
+                      TextButton(
+                        onPressed: () => setModalState(() {
+                          temp = <String>{};
+                        }),
+                        child: const Text('None'),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${temp.length}/${all.length}',
+                        style: TeveTheme.appText(
+                            size: 12,
+                            weight: FontWeight.w600,
+                            color: Colors.white70),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: all.length,
+                      itemBuilder: (context, index) {
+                        final entry = all[index];
+                        final code = entry.code.toLowerCase();
+                        final selected = temp.contains(code);
+                        return CheckboxListTile(
+                          value: selected,
+                          dense: true,
+                          secondary: CircleAvatar(
+                            radius: 12,
+                            backgroundImage:
+                                AssetImage('assets/images/${entry.code}.png'),
+                          ),
+                          title: Text(
+                            entry.name,
+                            style: TeveTheme.appText(
+                                size: 13, weight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            '${entry.totalChannels} streams',
+                            style: TeveTheme.appText(
+                                size: 11,
+                                weight: FontWeight.w500,
+                                color: Colors.white70),
+                          ),
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true) {
+                                temp.add(code);
+                              } else {
+                                temp.remove(code);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final allSet = all.map((e) => e.code.toLowerCase()).toSet();
+                  final next = temp.length == allSet.length ? null : temp;
+                  setState(() {
+                    _visibleCountryCodes = next;
+                  });
+                  await _saveVisibleCountries(next);
+                  if (!mounted) return;
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
+      },
+    );
   }
 
   @override
@@ -228,6 +379,15 @@ class _SelectScreenState extends State<SelectScreen> {
                       },
                       selectedColor: TeveTheme.logoLightColor,
                       backgroundColor: TeveTheme.slightDarkBlue,
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton(
+                      tooltip: 'Country display settings',
+                      onPressed: _openCountryVisibilitySettings,
+                      icon: const Icon(
+                        Icons.settings,
+                        color: TeveTheme.logoLightColor,
+                      ),
                     ),
                   ],
                 ),
