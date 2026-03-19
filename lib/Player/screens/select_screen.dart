@@ -159,7 +159,7 @@ class _SelectScreenState extends State<SelectScreen> {
           child: Align(
             alignment: Alignment.center,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
               Padding(
@@ -202,10 +202,10 @@ class _SelectScreenState extends State<SelectScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: countries.isEmpty
+              Expanded(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: countries.isEmpty
                     ? Center(
                         child: Text(
                           'No countries match your filters',
@@ -311,6 +311,7 @@ class _SelectScreenState extends State<SelectScreen> {
                             enlargeCenterPage: true,
                             initialPage: currentIndex,
                             scrollPhysics: const BouncingScrollPhysics())),
+                ),
               ),
               const SizedBox(
                 height: 10,

@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, must_be_immutable
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:better_player/better_player.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:teve/Utils/teve_theme.dart';
@@ -16,10 +17,20 @@ class Player extends StatefulWidget {
 class _PlayerState extends State<Player> {
   var betterPlayerConfiguration = BetterPlayerConfiguration(
     autoPlay: true,
+    deviceOrientationsOnFullScreen: const [
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+    ],
+    deviceOrientationsAfterFullScreen: const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ],
     controlsConfiguration: BetterPlayerControlsConfiguration(
       textColor: Colors.white,
       iconsColor: Colors.white,
-      enableFullscreen: false,
+      enableFullscreen: true,
       overflowModalColor: Colors.transparent,
       backgroundColor: Colors.transparent,
       loadingWidget: Center(
