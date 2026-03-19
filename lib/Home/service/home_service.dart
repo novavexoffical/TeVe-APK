@@ -30,6 +30,8 @@ class HomeService {
   Future<List<ChannelModel>> fetchChannels(BuildContext context) async {
     Object? lastError;
     final streamMaps = await _fetchStreamMaps();
+    final streamByChannelId = streamMaps[0];
+    final streamByTitle = streamMaps[1];
 
     for (final source in _channelSources) {
       final uri = Uri.parse(source);
@@ -51,8 +53,8 @@ class HomeService {
               .whereType<Map<String, dynamic>>()
               .map((json) => _channelFromAnyJson(
                     json,
-                    streamByChannelId: streamMaps.$1,
-                    streamByTitle: streamMaps.$2,
+                    streamByChannelId: streamByChannelId,
+                    streamByTitle: streamByTitle,
                   ))
               .whereType<ChannelModel>()
               .toList();
@@ -81,7 +83,7 @@ class HomeService {
     return [];
   }
 
-  Future<(Map<String, String>, Map<String, String>)> _fetchStreamMaps() async {
+  Future<List<Map<String, String>>> _fetchStreamMaps() async {
     final byChannelId = <String, String>{};
     final byTitle = <String, String>{};
 
@@ -118,7 +120,7 @@ class HomeService {
       }
     }
 
-    return (byChannelId, byTitle);
+    return [byChannelId, byTitle];
   }
 
   ChannelModel? _channelFromAnyJson(
