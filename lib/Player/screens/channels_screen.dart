@@ -28,6 +28,7 @@ class ChannelScreen extends StatefulWidget {
 class _ChannelScreenState extends State<ChannelScreen> {
   PlayerService service = PlayerService();
   String selectedCategory = 'All';
+  bool playableOnly = false;
   late List<String> categories;
 
   @override
@@ -46,11 +47,14 @@ class _ChannelScreenState extends State<ChannelScreen> {
   }
 
   List<ChannelModel> get filteredModels {
-    if (selectedCategory == 'All') return widget.models;
     return widget.models.where((m) {
-      return m.categories != null &&
-          m.categories!.isNotEmpty &&
-          m.categories![0].name == selectedCategory;
+      final categoryMatch = selectedCategory == 'All' ||
+          (m.categories != null &&
+              m.categories!.isNotEmpty &&
+              m.categories![0].name == selectedCategory);
+      final playableMatch =
+          !playableOnly || (m.url != null && m.url!.trim().isNotEmpty);
+      return categoryMatch && playableMatch;
     }).toList();
   }
 
@@ -98,6 +102,35 @@ class _ChannelScreenState extends State<ChannelScreen> {
                     ),
                   );
                 },
+              ),
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Row(
+                children: [
+                  FilterChip(
+                    label: Text(
+                      'Playable only',
+                      style: TeveTheme.appText(
+                        size: 12,
+                        weight: FontWeight.w600,
+                        color: TeveTheme.whiteColor,
+                      ),
+                    ),
+                    selected: playableOnly,
+                    onSelected: (val) {
+                      setState(() => playableOnly = val);
+                    },
+                    selectedColor: TeveTheme.logoLightColor,
+                    backgroundColor: TeveTheme.slightDarkBlue,
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${filteredModels.length} shown',
+                    style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
+                  )
+                ],
               ),
             ),
             Expanded(
