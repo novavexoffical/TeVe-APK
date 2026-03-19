@@ -55,6 +55,7 @@ class _LoginState extends State<Login> {
           Align(
             alignment: Alignment.center,
             child: FocusTraversalGroup(
+              policy: OrderedTraversalPolicy(),
               child: SingleChildScrollView(
                 child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
