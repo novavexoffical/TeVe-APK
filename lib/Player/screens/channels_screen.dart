@@ -174,6 +174,8 @@ class _ChannelScreenState extends State<ChannelScreen> {
                               horizontalOffset: 80.0,
                               child: FadeInAnimation(
                                 child: ChannelCard(
+                                    isPlayable: channel.url != null &&
+                                        channel.url!.trim().isNotEmpty,
                                     onFav: () {
                                       showDialog(
                                         context: context,

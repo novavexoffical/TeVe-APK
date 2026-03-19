@@ -11,10 +11,12 @@ class ChannelCard extends StatefulWidget {
       required this.model,
       required this.onFav,
       this.isLive = false,
+      this.isPlayable = false,
       required this.onTap});
   ChannelCardModel model;
   VoidCallback onTap;
   bool isLive;
+  bool isPlayable;
   VoidCallback onFav;
 
   @override
@@ -111,6 +113,26 @@ class _ChannelCardState extends State<ChannelCard> {
                 ),
               )
             ]),
+          ),
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: widget.isPlayable
+                    ? Colors.green.withOpacity(0.9)
+                    : Colors.orange.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                widget.isPlayable ? 'Playable' : 'No Stream',
+                style: TeveTheme.appText(
+                    size: 10,
+                    weight: FontWeight.w700,
+                    color: TeveTheme.whiteColor),
+              ),
+            ),
           ),
           Align(
               alignment: Alignment.topRight,
