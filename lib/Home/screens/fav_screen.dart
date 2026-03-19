@@ -121,7 +121,8 @@ class _FavScreenState extends State<FavScreen> {
   }
 
   Widget _buildPopupDialog(BuildContext context, {required FavModel model}) {
-    return AlertDialog(
+    return FocusTraversalGroup(
+      child: AlertDialog(
       backgroundColor: TeveTheme.slightDarkBlue,
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actionsPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
@@ -141,6 +142,7 @@ class _FavScreenState extends State<FavScreen> {
         SizedBox(
           width: 100,
           child: ElevatedButton(
+            autofocus: true,
             style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
             onPressed: () {
               service
@@ -174,6 +176,6 @@ class _FavScreenState extends State<FavScreen> {
           ),
         ),
       ],
-    );
+    ));
   }
 }

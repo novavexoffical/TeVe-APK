@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
-import 'package:teve/Login/login.dart';
+import 'package:teve/Home/home.dart';
 import 'package:teve/Utils/teve_theme.dart';
 
 class ErrorPage extends StatefulWidget {
@@ -19,8 +19,9 @@ class _ErrorPageState extends State<ErrorPage> {
   void initState() {
     WidgetsFlutterBinding.ensureInitialized();
     const orientations = [
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
     ];
     SystemChrome.setPreferredOrientations(orientations);
     super.initState();
@@ -34,62 +35,60 @@ class _ErrorPageState extends State<ErrorPage> {
         backgroundColor: TeveTheme.darkBlue,
         body: Center(
           child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    LottieBuilder.asset(
-                      "assets/jsons/not_found.json",
-                      height: 250,
-                      width: 250,
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      child: Text(
-                        widget.text,
-                        textAlign: TextAlign.center,
-                        style: TeveTheme.appText(
-                            size: 20, weight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              LottieBuilder.asset(
+                'assets/jsons/not_found.json',
+                height: 250,
+                width: 250,
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: Text(
+                  widget.text,
+                  textAlign: TextAlign.center,
+                  style: TeveTheme.appText(size: 20, weight: FontWeight.bold),
                 ),
-                const SizedBox(
-                  height: 80,
+              ),
+              const SizedBox(height: 50),
+              Container(
+                width: MediaQuery.of(context).size.width * 0.7,
+                height: 55,
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                        end: Alignment.topRight,
+                        begin: Alignment.bottomLeft,
+                        stops: const [0.0, 1.0],
+                        tileMode: TileMode.clamp,
+                        colors: [
+                          TeveTheme.logoDarkColor,
+                          TeveTheme.logoLightColor.withOpacity(0.7)
+                        ]),
+                    borderRadius: BorderRadius.circular(30)),
+                child: ElevatedButton(
+                  autofocus: true,
+                  style: TeveTheme.buttonStyle(
+                      backColor: Colors.transparent,
+                      borderColor: Colors.transparent),
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Home()),
+                      (route) => false,
+                    );
+                  },
+                  child: Text(
+                    'Back to Home',
+                    style: TeveTheme.appText(
+                        size: 16,
+                        weight: FontWeight.w600,
+                        color: TeveTheme.whiteColor),
+                  ),
                 ),
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.7,
-                  height: 55,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          end: Alignment.topRight,
-                          begin: Alignment.bottomLeft,
-                          stops: const [0.0, 1.0],
-                          tileMode: TileMode.clamp,
-                          colors: [
-                            TeveTheme.logoDarkColor,
-                            TeveTheme.logoLightColor.withOpacity(0.7)
-                          ]),
-                      borderRadius: BorderRadius.circular(30)),
-                  child: ElevatedButton(
-                      style: TeveTheme.buttonStyle(
-                          backColor: Colors.transparent,
-                          borderColor: Colors.transparent),
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) {
-                          return const Login();
-                        }));
-                      },
-                      child: Text(
-                        "Head to Login Page",
-                        style: TeveTheme.appText(
-                            size: 16,
-                            weight: FontWeight.w600,
-                            color: TeveTheme.whiteColor),
-                      )),
-                )
-              ]),
+              )
+            ],
+          ),
         ),
       ),
     );

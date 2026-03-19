@@ -432,6 +432,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
         SizedBox(
           width: 110,
           child: ElevatedButton(
+            autofocus: true,
             style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
             onPressed: () {
               service.addToFav(context: context, model: model).then((value) {
@@ -472,3 +473,4 @@ class _ChannelScreenState extends State<ChannelScreen> {
     );
   }
 }
+
