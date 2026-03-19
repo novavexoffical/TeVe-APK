@@ -142,6 +142,11 @@ class _SelectScreenState extends State<SelectScreen> {
     final int currentIndex = countries.isEmpty
         ? 0
         : (_current >= countries.length ? countries.length - 1 : _current);
+    final mq = MediaQuery.of(context);
+    final bool isCompactWidth = mq.size.width < 720;
+    final double floatingCounterHeight = isCompactWidth ? 78 : 64;
+    final double controlsBottomOffset =
+        mq.padding.bottom + (isCompactWidth ? floatingCounterHeight + 14 : 14);
 
     return Scaffold(
       appBar: TeveTheme.teveAppBar(child: widget.topWidget),
@@ -318,8 +323,7 @@ class _SelectScreenState extends State<SelectScreen> {
               ),
               if (countries.isNotEmpty)
                 Padding(
-                  padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 86),
+                  padding: EdgeInsets.only(bottom: controlsBottomOffset),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
