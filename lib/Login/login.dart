@@ -270,6 +270,7 @@ class _LoginState extends State<Login> {
               ),
             ),
           ),
+        ),
           Padding(
             padding: const EdgeInsets.all(30.0),
             child: Align(
