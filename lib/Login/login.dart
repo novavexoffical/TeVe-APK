@@ -113,6 +113,7 @@ class _LoginState extends State<Login> {
                       child: Column(
                         children: [
                           TextFormField(
+                            autofocus: true,
                             controller: emailController,
                             style: TeveTheme.appText(
                                 size: 14, weight: FontWeight.normal),
@@ -280,17 +281,17 @@ class _LoginState extends State<Login> {
                     style: TeveTheme.appText(
                         size: 12, weight: FontWeight.w500, isShadow: true),
                   ),
-                  GestureDetector(
-                    onTap: () {
+                  TextButton(
+                    onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) {
                         return const SignUp();
                       }));
                     },
                     child: Text(
-                      " Register",
+                      "Register",
                       style: TeveTheme.appText(
                           size: 12,
-                          weight: FontWeight.w500,
+                          weight: FontWeight.w600,
                           isShadow: true,
                           color: TeveTheme.logoDarkColor),
                     ),
