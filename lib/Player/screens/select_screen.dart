@@ -38,6 +38,8 @@ class _SelectScreenState extends State<SelectScreen> {
 
   bool _playableOnly = false;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _firstCountryFocusNode = FocusNode();
+  int? _focusedCountryIndex;
   Set<String>? _visibleCountryCodes;
 
   String get _searchQuery => _searchController.text.trim().toLowerCase();
@@ -90,6 +92,9 @@ class _SelectScreenState extends State<SelectScreen> {
   void initState() {
     super.initState();
     _loadVisibleCountries();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _firstCountryFocusNode.requestFocus();
+    });
   }
 
   Future<void> _loadVisibleCountries() async {
@@ -234,6 +239,7 @@ class _SelectScreenState extends State<SelectScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _firstCountryFocusNode.dispose();
     super.dispose();
   }
 
@@ -259,7 +265,17 @@ class _SelectScreenState extends State<SelectScreen> {
 
   Widget _countryCard(_CountryEntry entry, int index) {
     return Focus(
+      focusNode: index == 0 ? _firstCountryFocusNode : null,
       autofocus: index == 0,
+      onFocusChange: (hasFocus) {
+        setState(() {
+          if (hasFocus) {
+            _focusedCountryIndex = index;
+          } else if (_focusedCountryIndex == index) {
+            _focusedCountryIndex = null;
+          }
+        });
+      },
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent &&
             (event.logicalKey == LogicalKeyboardKey.select ||
@@ -279,8 +295,10 @@ class _SelectScreenState extends State<SelectScreen> {
             color: TeveTheme.slightDarkBlue,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: TeveTheme.logoDarkColor.withOpacity(0.35),
-              width: 1,
+              color: _focusedCountryIndex == index
+                  ? TeveTheme.logoLightColor
+                  : TeveTheme.logoDarkColor.withOpacity(0.35),
+              width: _focusedCountryIndex == index ? 2.4 : 1,
             ),
           ),
           child: Row(
@@ -352,15 +370,18 @@ class _SelectScreenState extends State<SelectScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (_) => setState(() {}),
-                        style:
-                            TeveTheme.appText(size: 14, weight: FontWeight.w500),
-                        decoration: TeveTheme.waInputDecoration(
-                          hint: 'Search country (e.g. US, India, Brazil)',
-                          prefixIcon: Icons.search,
-                          fontSize: 14,
+                      child: Focus(
+                        skipTraversal: true,
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (_) => setState(() {}),
+                          style: TeveTheme.appText(
+                              size: 14, weight: FontWeight.w500),
+                          decoration: TeveTheme.waInputDecoration(
+                            hint: 'Search country (e.g. US, India, Brazil)',
+                            prefixIcon: Icons.search,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
