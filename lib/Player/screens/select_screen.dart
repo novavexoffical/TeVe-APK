@@ -28,7 +28,9 @@ class _CountryEntry {
 
   int get totalChannels => channels.length;
 
-  int get playableChannels => channels.where((c) => c.isPlayable).length;
+  int get playableChannels => channels
+      .where((c) => c.url != null && c.url!.trim().isNotEmpty)
+      .length;
 }
 
 class _SelectScreenState extends State<SelectScreen> {
@@ -86,28 +88,6 @@ class _SelectScreenState extends State<SelectScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _openSelectedCountry(List<_CountryEntry> countries, int currentIndex) {
-    if (countries.isEmpty) return;
-    final entry = countries[currentIndex];
-    Navigator.push(context, MaterialPageRoute(builder: ((context) {
-      return ChannelScreen(
-          isLive: true,
-          models: entry.channels,
-          topWidget:
-              Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            widget.topWidget,
-            const SizedBox(width: 5),
-            Text(
-              entry.name,
-              style: TeveTheme.appText(
-                  size: 14,
-                  weight: FontWeight.w500,
-                  color: TeveTheme.logoDarkColor),
-            )
-          ]));
-    })));
   }
 
   @override
@@ -211,7 +191,29 @@ class _SelectScreenState extends State<SelectScreen> {
                                   borderRadius: BorderRadius.circular(70),
                                   onTap: () {
                                     setState(() => _current = index);
-                                    _openSelectedCountry(countries, index);
+                                    Navigator.push(context,
+                                        MaterialPageRoute(builder: ((context) {
+                                      return ChannelScreen(
+                                          isLive: true,
+                                          models: entry.channels,
+                                          topWidget: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                widget.topWidget,
+                                                const SizedBox(
+                                                  width: 5,
+                                                ),
+                                                Text(
+                                                  entry.name,
+                                                  style: TeveTheme.appText(
+                                                      size: 14,
+                                                      weight: FontWeight.w500,
+                                                      color: TeveTheme
+                                                          .logoDarkColor),
+                                                )
+                                              ]));
+                                    })));
                                   },
                                   child: Container(
                                     height: 120,
@@ -286,55 +288,32 @@ class _SelectScreenState extends State<SelectScreen> {
                             initialPage: currentIndex,
                             scrollPhysics: const BouncingScrollPhysics())),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
+              if (countries.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 14),
+                  child: ElevatedButton(
+                    onLongPress: () {
+                      buttonCarouselController.animateToPage(currentIndex + 20);
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: TeveTheme.logoLightColor),
+                    onPressed: () => buttonCarouselController.nextPage(
+                        duration: const Duration(milliseconds: 100),
+                        curve: Curves.linear),
+                    child: const Icon(
+                      Icons.arrow_forward,
+                      size: 24,
+                    ),
+                  ),
+                )
             ],
           ),
         ),
         ),
-        if (countries.isNotEmpty)
-          SafeArea(
-            minimum: const EdgeInsets.only(bottom: 8),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: TeveTheme.logoLightColor),
-                    onPressed: () {
-                      final prev = currentIndex > 0 ? currentIndex - 1 : 0;
-                      buttonCarouselController.animateToPage(prev);
-                      setState(() => _current = prev);
-                    },
-                    child: const Icon(Icons.arrow_back, size: 22),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: TeveTheme.logoDarkColor),
-                    onPressed: () => _openSelectedCountry(countries, currentIndex),
-                    child: Text('Select',
-                        style: TeveTheme.appText(
-                            size: 14, weight: FontWeight.w600)),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: TeveTheme.logoLightColor),
-                    onPressed: () {
-                      final next = currentIndex < countries.length - 1
-                          ? currentIndex + 1
-                          : currentIndex;
-                      buttonCarouselController.animateToPage(next);
-                      setState(() => _current = next);
-                    },
-                    child: const Icon(Icons.arrow_forward, size: 22),
-                  ),
-                ],
-              ),
-            ),
-          ),
         SafeArea(
           minimum: const EdgeInsets.only(bottom: 8, right: 8),
           child: Align(

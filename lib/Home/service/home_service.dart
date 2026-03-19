@@ -17,8 +17,6 @@ import 'package:teve/common/api.dart';
 class HomeService {
   ApiService apiService = ApiService();
 
-  static const String blockedStreamPrefKey = 'blocked_stream_urls';
-
   static const List<String> _channelSources = [
     "https://iptv-org.github.io/api/channels.json",
     "https://cdn.jsdelivr.net/gh/iptv-org/iptv@master/channels.json",
@@ -31,7 +29,6 @@ class HomeService {
 
   Future<List<ChannelModel>> fetchChannels(BuildContext context) async {
     Object? lastError;
-    final blockedUrls = await _getBlockedUrls();
     final streamMaps = await _fetchStreamMaps();
     final streamByChannelId = streamMaps[0];
     final streamByTitle = streamMaps[1];
@@ -58,7 +55,6 @@ class HomeService {
                     json,
                     streamByChannelId: streamByChannelId,
                     streamByTitle: streamByTitle,
-                    blockedUrls: blockedUrls,
                   ))
               .whereType<ChannelModel>()
               .toList();
@@ -127,26 +123,10 @@ class HomeService {
     return [byChannelId, byTitle];
   }
 
-  Future<Set<String>> _getBlockedUrls() async {
-    final pref = await SharedPreferences.getInstance();
-    final values = pref.getStringList(blockedStreamPrefKey) ?? <String>[];
-    return values.map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
-  }
-
-  static Future<void> markStreamBlocked(String url) async {
-    final pref = await SharedPreferences.getInstance();
-    final blocked = pref.getStringList(blockedStreamPrefKey) ?? <String>[];
-    if (!blocked.contains(url)) {
-      blocked.add(url);
-      await pref.setStringList(blockedStreamPrefKey, blocked);
-    }
-  }
-
   ChannelModel? _channelFromAnyJson(
     Map<String, dynamic> json, {
     required Map<String, String> streamByChannelId,
     required Map<String, String> streamByTitle,
-    required Set<String> blockedUrls,
   }) {
     try {
       final categoriesRaw = json['categories'];
@@ -205,7 +185,6 @@ class HomeService {
         categories: categories,
         countries: countries,
         languages: languages,
-        isBlocked: resolvedUrl != null && blockedUrls.contains(resolvedUrl),
       );
     } catch (_) {
       return null;

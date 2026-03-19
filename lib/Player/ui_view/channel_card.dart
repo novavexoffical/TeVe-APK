@@ -13,13 +13,11 @@ class ChannelCard extends StatefulWidget {
       required this.onFav,
       this.isLive = false,
       this.isPlayable = false,
-      this.isBlocked = false,
       required this.onTap});
   ChannelCardModel model;
   VoidCallback onTap;
   bool isLive;
   bool isPlayable;
-  bool isBlocked;
   VoidCallback onFav;
 
   @override
@@ -147,19 +145,13 @@ class _ChannelCardState extends State<ChannelCard> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: widget.isBlocked
-                    ? Colors.red.withOpacity(0.9)
-                    : widget.isPlayable
-                        ? Colors.green.withOpacity(0.9)
-                        : Colors.orange.withOpacity(0.9),
+                color: widget.isPlayable
+                    ? Colors.green.withOpacity(0.9)
+                    : Colors.orange.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                widget.isBlocked
-                    ? 'Blocked'
-                    : widget.isPlayable
-                        ? 'Playable'
-                        : 'No Stream',
+                widget.isPlayable ? 'Playable' : 'No Stream',
                 style: TeveTheme.appText(
                     size: 10,
                     weight: FontWeight.w700,

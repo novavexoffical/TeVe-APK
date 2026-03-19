@@ -29,7 +29,6 @@ class _ChannelScreenState extends State<ChannelScreen> {
   PlayerService service = PlayerService();
   String selectedCategory = 'All';
   bool playableOnly = false;
-  bool listView = false;
   late List<String> categories;
 
   @override
@@ -53,7 +52,8 @@ class _ChannelScreenState extends State<ChannelScreen> {
           (m.categories != null &&
               m.categories!.isNotEmpty &&
               m.categories![0].name == selectedCategory);
-      final playableMatch = !playableOnly || m.isPlayable;
+      final playableMatch =
+          !playableOnly || (m.url != null && m.url!.trim().isNotEmpty);
       return categoryMatch && playableMatch;
     }).toList();
   }
@@ -126,14 +126,6 @@ class _ChannelScreenState extends State<ChannelScreen> {
                     backgroundColor: TeveTheme.slightDarkBlue,
                   ),
                   const Spacer(),
-                  IconButton(
-                    tooltip: listView ? 'Grid view' : 'List view',
-                    onPressed: () => setState(() => listView = !listView),
-                    icon: Icon(
-                      listView ? Icons.grid_view_rounded : Icons.view_list_rounded,
-                      color: TeveTheme.whiteColor,
-                    ),
-                  ),
                   Text(
                     '${filteredModels.length} shown',
                     style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
@@ -161,140 +153,89 @@ class _ChannelScreenState extends State<ChannelScreen> {
                         ],
                       ),
                     )
-                  : listView
-                      ? ListView.builder(
-                          padding: const EdgeInsets.all(10),
-                          itemCount: filteredModels.length,
-                          itemBuilder: (context, index) {
-                            final channel = filteredModels[index];
-                            return Card(
-                              color: TeveTheme.slightDarkBlue,
-                              child: ListTile(
-                                autofocus: index == 0,
-                                onTap: () => _openChannel(context, channel),
-                                leading: Icon(
-                                  channel.isBlocked
-                                      ? Icons.block
-                                      : channel.isPlayable
-                                          ? Icons.play_circle_fill
-                                          : Icons.info_outline,
-                                  color: channel.isBlocked
-                                      ? Colors.redAccent
-                                      : channel.isPlayable
-                                          ? Colors.greenAccent
-                                          : Colors.orangeAccent,
-                                ),
-                                title: Text(
-                                  channel.name ?? 'Unknown',
-                                  style: TeveTheme.appText(
-                                      size: 14, weight: FontWeight.w600),
-                                ),
-                                subtitle: Text(
-                                  channel.categories!.isNotEmpty
-                                      ? channel.categories![0].name ?? 'General'
-                                      : 'General',
-                                  style: TeveTheme.appText(
-                                      size: 11,
-                                      weight: FontWeight.w500,
-                                      color: Colors.white70),
-                                ),
-                                trailing: IconButton(
-                                  onPressed: () => showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) =>
-                                        _buildPopupDialog(context,
-                                            model: channel),
-                                  ),
-                                  icon: const Icon(Icons.more_vert,
-                                      color: Colors.white),
-                                ),
+                  : AnimationLimiter(
+                      child: GridView.count(
+                        key: const PageStorageKey<String>('GridView'),
+                        crossAxisCount: 4,
+                        padding: const EdgeInsets.all(10),
+                        mainAxisSpacing: 20,
+                        crossAxisSpacing: 20,
+                        childAspectRatio: 0.8,
+                        physics: const BouncingScrollPhysics(),
+                        children:
+                            List.generate(filteredModels.length, (index) {
+                          final channel = filteredModels[index];
+                          return AnimationConfiguration.staggeredGrid(
+                            position: index,
+                            duration:
+                                const Duration(seconds: 1, milliseconds: 500),
+                            columnCount: 4,
+                            child: SlideAnimation(
+                              horizontalOffset: 80.0,
+                              child: FadeInAnimation(
+                                child: ChannelCard(
+                                    isPlayable: channel.url != null &&
+                                        channel.url!.trim().isNotEmpty,
+                                    onFav: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            _buildPopupDialog(context,
+                                                model: channel),
+                                      );
+                                    },
+                                    onTap: () {
+                                      final streamUrl = channel.url;
+                                      if (streamUrl == null ||
+                                          streamUrl.trim().isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "No playable stream found for this channel yet.",
+                                              style: TeveTheme.appText(
+                                                  size: 12,
+                                                  weight: FontWeight.w500),
+                                            ),
+                                            backgroundColor: TeveTheme.slightBlue,
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (_) {
+                                        return Player(video_url: streamUrl);
+                                      }));
+                                    },
+                                    isLive: widget.isLive,
+                                    model: ChannelCardModel(
+                                        channel_category: channel
+                                                .categories!.isNotEmpty
+                                            ? channel.categories![0].name!
+                                            : "Entertainment",
+                                        channel_name: channel.name!,
+                                        code: channel.countries!.isNotEmpty
+                                            ? channel.countries![0].code!
+                                            : "International",
+                                        image_url: channel.logo != null
+                                            ? channel.logo!
+                                            : "https://i.imgur.com/rzrOS3N.png",
+                                        languages:
+                                            channel.languages!.isNotEmpty
+                                                ? channel.languages![0].name!
+                                                : "None")),
                               ),
-                            );
-                          },
-                        )
-                      : AnimationLimiter(
-                          child: GridView.count(
-                            key: const PageStorageKey<String>('GridView'),
-                            crossAxisCount: 4,
-                            padding: const EdgeInsets.all(10),
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 20,
-                            childAspectRatio: 0.8,
-                            physics: const BouncingScrollPhysics(),
-                            children: List.generate(filteredModels.length,
-                                (index) {
-                              final channel = filteredModels[index];
-                              return AnimationConfiguration.staggeredGrid(
-                                position: index,
-                                duration: const Duration(
-                                    seconds: 1, milliseconds: 500),
-                                columnCount: 4,
-                                child: SlideAnimation(
-                                  horizontalOffset: 80.0,
-                                  child: FadeInAnimation(
-                                    child: ChannelCard(
-                                        isPlayable: channel.isPlayable,
-                                        isBlocked: channel.isBlocked,
-                                        onFav: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) =>
-                                                _buildPopupDialog(context,
-                                                    model: channel),
-                                          );
-                                        },
-                                        onTap: () => _openChannel(context, channel),
-                                        isLive: widget.isLive,
-                                        model: ChannelCardModel(
-                                            channel_category: channel
-                                                    .categories!.isNotEmpty
-                                                ? channel.categories![0].name!
-                                                : "Entertainment",
-                                            channel_name: channel.name!,
-                                            code: channel.countries!.isNotEmpty
-                                                ? channel.countries![0].code!
-                                                : "International",
-                                            image_url: channel.logo != null
-                                                ? channel.logo!
-                                                : "https://i.imgur.com/rzrOS3N.png",
-                                            languages:
-                                                channel.languages!.isNotEmpty
-                                                    ? channel.languages![0].name!
-                                                    : "None")),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
             ),
           ],
         )
       ]),
     );
-  }
-
-  void _openChannel(BuildContext context, ChannelModel channel) {
-    final streamUrl = channel.url;
-    if (!channel.isPlayable || streamUrl == null || streamUrl.trim().isEmpty) {
-      final msg = channel.isBlocked
-          ? "This stream is marked blocked (copyright/geo)."
-          : "No playable stream found for this channel yet.";
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            msg,
-            style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
-          ),
-          backgroundColor: TeveTheme.slightBlue,
-        ),
-      );
-      return;
-    }
-
-    Navigator.push(context, MaterialPageRoute(builder: (_) {
-      return Player(video_url: streamUrl);
-    }));
   }
 
   Widget _buildPopupDialog(BuildContext context,

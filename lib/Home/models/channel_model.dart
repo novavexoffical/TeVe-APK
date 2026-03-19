@@ -11,7 +11,6 @@ class ChannelModel {
   List<Countries>? countries;
   List<Languages>? languages;
   Tvg? tvg;
-  bool isBlocked;
 
   ChannelModel(
       {this.name,
@@ -20,8 +19,7 @@ class ChannelModel {
       this.categories,
       this.countries,
       this.languages,
-      this.tvg,
-      this.isBlocked = false});
+      this.tvg});
 
   ChannelModel.fromJson(Map<String, dynamic> json) {
     name = json['name'];
@@ -47,9 +45,6 @@ class ChannelModel {
     }
     tvg = json['tvg'] != null ? Tvg.fromJson(json['tvg']) : null;
   }
-
-  bool get isPlayable =>
-      !isBlocked && url != null && url!.trim().isNotEmpty;
 
   Map<String, dynamic> toJson() {
     return {

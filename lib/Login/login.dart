@@ -54,10 +54,8 @@ class _LoginState extends State<Login> {
           ),
           Align(
             alignment: Alignment.center,
-            child: FocusTraversalGroup(
-              policy: OrderedTraversalPolicy(),
-              child: SingleChildScrollView(
-                child: Column(
+            child: SingleChildScrollView(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -115,7 +113,6 @@ class _LoginState extends State<Login> {
                       child: Column(
                         children: [
                           TextFormField(
-                            autofocus: true,
                             controller: emailController,
                             style: TeveTheme.appText(
                                 size: 14, weight: FontWeight.normal),
@@ -283,17 +280,17 @@ class _LoginState extends State<Login> {
                     style: TeveTheme.appText(
                         size: 12, weight: FontWeight.w500, isShadow: true),
                   ),
-                  TextButton(
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) {
                         return const SignUp();
                       }));
                     },
                     child: Text(
-                      "Register",
+                      " Register",
                       style: TeveTheme.appText(
                           size: 12,
-                          weight: FontWeight.w600,
+                          weight: FontWeight.w500,
                           isShadow: true,
                           color: TeveTheme.logoDarkColor),
                     ),
