@@ -29,7 +29,7 @@ class ChannelScreen extends StatefulWidget {
 class _ChannelScreenState extends State<ChannelScreen> {
   PlayerService service = PlayerService();
   String selectedCategory = 'All';
-  bool playableOnly = false;
+  bool playableOnly = true;
   bool listView = false;
   late List<String> categories;
   final Set<String> _blockedStreamKeys = <String>{};
