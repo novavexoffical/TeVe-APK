@@ -1,5 +1,6 @@
 // ignore_for_file: unused_local_variable, use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -13,26 +14,48 @@ import 'package:teve/common/api.dart';
 class HomeService {
   ApiService apiService = ApiService();
 
+  static const List<String> _channelSources = [
+    "https://iptv-org.github.io/api/channels.json",
+    "https://cdn.jsdelivr.net/gh/iptv-org/iptv@master/channels.json",
+  ];
+
   Future<List<ChannelModel>> fetchChannels(BuildContext context) async {
-    try {
-      final uri = Uri.parse("${TeveTheme.iptvURl}api/channels.json");
-      final response = await http.get(uri).timeout(const Duration(seconds: 20));
+    Object? lastError;
 
-      if (response.statusCode != 200) {
-        TeveTheme.moveToErrorPage(
-            context: context,
-            text: "Unable to load channels (HTTP ${response.statusCode})");
-        return [];
+    for (final source in _channelSources) {
+      final uri = Uri.parse(source);
+
+      for (int attempt = 1; attempt <= 2; attempt++) {
+        try {
+          final response = await http
+              .get(uri, headers: {"accept": "application/json"})
+              .timeout(const Duration(seconds: 30));
+
+          if (response.statusCode != 200) {
+            lastError = "HTTP ${response.statusCode} from ${uri.host}";
+            continue;
+          }
+
+          final List<dynamic> payload =
+              jsonDecode(response.body) as List<dynamic>;
+          return payload.map((e) => ChannelModel.fromJson(e)).toList();
+        } on TimeoutException {
+          lastError = "Request timed out from ${uri.host}";
+          if (attempt == 1) {
+            await Future.delayed(const Duration(milliseconds: 700));
+          }
+        } catch (e) {
+          lastError = e;
+        }
       }
-
-      final List<dynamic> payload = jsonDecode(response.body) as List<dynamic>;
-      return payload.map((e) => ChannelModel.fromJson(e)).toList();
-    } catch (e) {
-      TeveTheme.moveToErrorPage(
-          context: context,
-          text: "Unable to load channels. Check internet and try again.");
-      return [];
     }
+
+    TeveTheme.moveToErrorPage(
+      context: context,
+      text: "Unable to load channels right now. Please try again in a minute.",
+    );
+    debugPrint("fetchChannels failed: $lastError");
+    return [];
   }
 
   Future<List<FavModel>> fetchFavChannels(BuildContext context) async {
