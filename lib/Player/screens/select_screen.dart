@@ -246,10 +246,17 @@ class _SelectScreenState extends State<SelectScreen> {
   }
 
   void _openCountry(_CountryEntry entry) {
+    final isUs = entry.code.toLowerCase() == 'us';
+    final countryModels = isUs
+        ? entry.channels
+            .where((c) => c.url != null && c.url!.trim().isNotEmpty)
+            .toList()
+        : entry.channels;
+
     Navigator.push(context, MaterialPageRoute(builder: ((context) {
       return ChannelScreen(
           isLive: true,
-          models: entry.channels,
+          models: countryModels,
           topWidget:
               Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             widget.topWidget,
