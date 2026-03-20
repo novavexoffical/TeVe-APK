@@ -38,6 +38,7 @@ class _SelectScreenState extends State<SelectScreen> {
 
   bool _playableOnly = false;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFieldFocusNode = FocusNode();
   final FocusNode _firstCountryFocusNode = FocusNode();
   int? _focusedCountryIndex;
   Set<String>? _visibleCountryCodes;
@@ -239,6 +240,7 @@ class _SelectScreenState extends State<SelectScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFieldFocusNode.dispose();
     _firstCountryFocusNode.dispose();
     super.dispose();
   }
@@ -371,8 +373,18 @@ class _SelectScreenState extends State<SelectScreen> {
                   children: [
                     Expanded(
                       child: Focus(
-                        skipTraversal: true,
+                        onKeyEvent: (node, event) {
+                          if (event is KeyDownEvent &&
+                              (event.logicalKey == LogicalKeyboardKey.select ||
+                                  event.logicalKey ==
+                                      LogicalKeyboardKey.enter)) {
+                            _searchFieldFocusNode.requestFocus();
+                            return KeyEventResult.handled;
+                          }
+                          return KeyEventResult.ignored;
+                        },
                         child: TextField(
+                          focusNode: _searchFieldFocusNode,
                           controller: _searchController,
                           onChanged: (_) => setState(() {}),
                           style: TeveTheme.appText(
@@ -402,12 +414,24 @@ class _SelectScreenState extends State<SelectScreen> {
                       backgroundColor: TeveTheme.slightDarkBlue,
                     ),
                     const SizedBox(width: 6),
-                    IconButton(
-                      tooltip: 'Country display settings',
-                      onPressed: _openCountryVisibilitySettings,
-                      icon: const Icon(
-                        Icons.settings,
-                        color: TeveTheme.logoLightColor,
+                    Focus(
+                      onKeyEvent: (node, event) {
+                        if (event is KeyDownEvent &&
+                            (event.logicalKey == LogicalKeyboardKey.select ||
+                                event.logicalKey ==
+                                    LogicalKeyboardKey.enter)) {
+                          _openCountryVisibilitySettings();
+                          return KeyEventResult.handled;
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: IconButton(
+                        tooltip: 'Country display settings',
+                        onPressed: _openCountryVisibilitySettings,
+                        icon: const Icon(
+                          Icons.settings,
+                          color: TeveTheme.logoLightColor,
+                        ),
                       ),
                     ),
                   ],
