@@ -82,6 +82,7 @@ class _HomeState extends State<Home> {
       onWillPop: () async => false,
       child: Scaffold(
         appBar: TeveTheme.teveAppBar(
+            settingsIcon: Icons.settings_rounded,
             onFav: () async {
               Navigator.push(context, MaterialPageRoute(builder: (_) {
                 return const FavScreen();
