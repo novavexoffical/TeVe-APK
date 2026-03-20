@@ -8,6 +8,7 @@ import 'package:teve/Home/models/channel_model.dart';
 import 'package:teve/Home/screens/fav_screen.dart';
 import 'package:teve/Player/models/channel_card_model.dart';
 import 'package:teve/Player/player.dart';
+import 'package:teve/Player/screens/blocked_screen.dart';
 import 'package:teve/Player/service/player_service.dart';
 import 'package:teve/Player/ui_view/channel_card.dart';
 
@@ -344,13 +345,24 @@ class _ChannelScreenState extends State<ChannelScreen> {
       appBar: TeveTheme.teveAppBar(
           child: widget.topWidget,
           showSettings: true,
+          showBlockedIcon: true,
+          blockedIcon: Icons.block,
+          onBlocked: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) {
+              return BlockedScreen(models: widget.models);
+            }));
+            if (!mounted) return;
+            _loadBlockedStreams();
+          },
           showPowerIcon: true,
           settingsIcon: Icons.category_rounded,
           onSettings: _openCategoriesPopup,
-          onFav: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) {
+          onFav: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) {
               return const FavScreen();
             }));
+            if (!mounted) return;
+            _loadFavoriteStreams();
           }),
       body: Stack(children: [
         Container(

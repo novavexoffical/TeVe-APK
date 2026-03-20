@@ -40,6 +40,9 @@ class TeveTheme {
   static AppBar teveAppBar(
       {Widget child = const SizedBox(),
       bool showSettings = false,
+      bool showBlockedIcon = false,
+      IconData blockedIcon = Icons.block,
+      VoidCallback? onBlocked,
       bool showFavIcon = true,
       bool showPowerIcon = true,
       IconData settingsIcon = Icons.power_settings_new,
@@ -99,11 +102,19 @@ class TeveTheme {
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    if (showBlockedIcon)
+                      _RemoteAppBarIconButton(
+                        icon: blockedIcon,
+                        onPressed: onBlocked,
+                        autofocus: true,
+                      ),
+                    if (showBlockedIcon && (showFavIcon || showPowerIcon))
+                      const SizedBox(width: 10),
                     if (showFavIcon)
                       _RemoteAppBarIconButton(
                         icon: Icons.favorite,
                         onPressed: onFav,
-                        autofocus: true,
+                        autofocus: !showBlockedIcon,
                       ),
                     if (showFavIcon && showPowerIcon)
                       const SizedBox(
