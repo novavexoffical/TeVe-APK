@@ -126,6 +126,7 @@ class _SelectScreenState extends State<SelectScreen> {
         ? all.map((e) => e.code.toLowerCase()).toSet()
         : {..._visibleCountryCodes!};
     Set<String> temp = {...initial};
+    int focusedModalIndex = -1;
 
     await showDialog(
       context: context,
@@ -135,78 +136,159 @@ class _SelectScreenState extends State<SelectScreen> {
             backgroundColor: TeveTheme.slightDarkBlue,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Text(
-              'Visible countries',
-              style: TeveTheme.appText(size: 16, weight: FontWeight.w700),
+            titlePadding:
+                const EdgeInsets.only(left: 20, right: 10, top: 16, bottom: 6),
+            contentPadding:
+                const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 4),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Visible countries',
+                    style: TeveTheme.appText(size: 16, weight: FontWeight.w700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => setModalState(() {
+                    temp = all.map((e) => e.code.toLowerCase()).toSet();
+                  }),
+                  child: const Text('All'),
+                ),
+                TextButton(
+                  onPressed: () => setModalState(() {
+                    temp = <String>{};
+                  }),
+                  child: const Text('None'),
+                ),
+              ],
             ),
             content: SizedBox(
-              width: 460,
-              height: 420,
+              width: 500,
+              height: 470,
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: () => setModalState(() {
-                          temp = all.map((e) => e.code.toLowerCase()).toSet();
-                        }),
-                        child: const Text('All'),
-                      ),
-                      TextButton(
-                        onPressed: () => setModalState(() {
-                          temp = <String>{};
-                        }),
-                        child: const Text('None'),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${temp.length}/${all.length}',
-                        style: TeveTheme.appText(
-                            size: 12,
-                            weight: FontWeight.w600,
-                            color: Colors.white70),
-                      )
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 4),
+                        Text(
+                          '${temp.length}/${all.length}',
+                          style: TeveTheme.appText(
+                              size: 12,
+                              weight: FontWeight.w600,
+                              color: Colors.white70),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: all.length,
-                      itemBuilder: (context, index) {
-                        final entry = all[index];
-                        final code = entry.code.toLowerCase();
-                        final selected = temp.contains(code);
-                        return CheckboxListTile(
-                          value: selected,
-                          dense: true,
-                          secondary: CircleAvatar(
-                            radius: 12,
-                            backgroundImage:
-                                AssetImage('assets/images/${entry.code}.png'),
-                          ),
-                          title: Text(
-                            entry.name,
-                            style: TeveTheme.appText(
-                                size: 13, weight: FontWeight.w600),
-                          ),
-                          subtitle: Text(
-                            '${entry.totalChannels} streams',
-                            style: TeveTheme.appText(
-                                size: 11,
-                                weight: FontWeight.w500,
-                                color: Colors.white70),
-                          ),
-                          onChanged: (val) {
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        itemCount: all.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          final entry = all[index];
+                          final code = entry.code.toLowerCase();
+                          final selected = temp.contains(code);
+                          final focused = focusedModalIndex == index;
+
+                          void toggleSelection() {
                             setModalState(() {
-                              if (val == true) {
-                                temp.add(code);
-                              } else {
+                              if (selected) {
                                 temp.remove(code);
+                              } else {
+                                temp.add(code);
                               }
                             });
-                          },
-                        );
-                      },
+                          }
+
+                          return FocusableActionDetector(
+                            onFocusChange: (hasFocus) {
+                              setModalState(() {
+                                if (hasFocus) {
+                                  focusedModalIndex = index;
+                                } else if (focusedModalIndex == index) {
+                                  focusedModalIndex = -1;
+                                }
+                              });
+                            },
+                            shortcuts: const <ShortcutActivator, Intent>{
+                              SingleActivator(LogicalKeyboardKey.select):
+                                  ActivateIntent(),
+                              SingleActivator(LogicalKeyboardKey.enter):
+                                  ActivateIntent(),
+                            },
+                            actions: <Type, Action<Intent>>{
+                              ActivateIntent: CallbackAction<ActivateIntent>(
+                                onInvoke: (intent) {
+                                  toggleSelection();
+                                  return null;
+                                },
+                              ),
+                            },
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: toggleSelection,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 120),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: TeveTheme.darkBlue.withOpacity(0.35),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: focused
+                                        ? TeveTheme.logoLightColor
+                                        : selected
+                                            ? TeveTheme.logoDarkColor
+                                            : Colors.white24,
+                                    width: focused ? 2.2 : (selected ? 1.4 : 1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 12,
+                                      backgroundImage: AssetImage(
+                                          'assets/images/${entry.code}.png'),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            entry.name,
+                                            style: TeveTheme.appText(
+                                                size: 13,
+                                                weight: FontWeight.w600),
+                                          ),
+                                          const SizedBox(height: 1),
+                                          Text(
+                                            '${entry.totalChannels} streams',
+                                            style: TeveTheme.appText(
+                                                size: 11,
+                                                weight: FontWeight.w500,
+                                                color: Colors.white70),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Checkbox(
+                                      value: selected,
+                                      onChanged: (_) => toggleSelection(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
