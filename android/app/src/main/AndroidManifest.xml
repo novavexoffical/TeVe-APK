@@ -2,7 +2,7 @@
     package="com.example.teve">
    <uses-permission android:name="android.permission.INTERNET"/>
    <application
-        android:label="teve"
+        android:label="TeVe"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
