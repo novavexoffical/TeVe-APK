@@ -35,6 +35,9 @@ class _ChannelScreenState extends State<ChannelScreen> {
   String selectedCategory = 'All';
   bool playableOnly = true;
   bool listView = false;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _channelSearchFocusNode = FocusNode();
+  bool _searchHasFocus = false;
   late List<String> categories;
   final FocusNode _firstCategoryFocusNode = FocusNode();
   int? _focusedCategoryIndex;
@@ -63,6 +66,8 @@ class _ChannelScreenState extends State<ChannelScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
+    _channelSearchFocusNode.dispose();
     _firstCategoryFocusNode.dispose();
     super.dispose();
   }
@@ -156,13 +161,19 @@ class _ChannelScreenState extends State<ChannelScreen> {
   }
 
   List<ChannelModel> get filteredModels {
+    final query = _searchController.text.trim().toLowerCase();
     return widget.models.where((m) {
       final categoryMatch = selectedCategory == 'All' ||
           (m.categories != null &&
               m.categories!.isNotEmpty &&
               m.categories![0].name == selectedCategory);
       final playableMatch = !playableOnly || _isPlayable(m);
-      return categoryMatch && playableMatch;
+      final name = (m.name ?? '').toLowerCase();
+      final cat = (m.categories != null && m.categories!.isNotEmpty)
+          ? (m.categories![0].name ?? '').toLowerCase()
+          : '';
+      final searchMatch = query.isEmpty || name.contains(query) || cat.contains(query);
+      return categoryMatch && playableMatch && searchMatch;
     }).toList();
   }
 
@@ -246,6 +257,50 @@ class _ChannelScreenState extends State<ChannelScreen> {
                     ),
                   );
                 },
+              ),
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Focus(
+                onFocusChange: (hasFocus) {
+                  setState(() => _searchHasFocus = hasFocus);
+                },
+                onKeyEvent: (node, event) {
+                  if (event is KeyDownEvent &&
+                      (event.logicalKey == LogicalKeyboardKey.select ||
+                          event.logicalKey == LogicalKeyboardKey.enter)) {
+                    _channelSearchFocusNode.requestFocus();
+                    return KeyEventResult.handled;
+                  }
+                  return KeyEventResult.ignored;
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _searchHasFocus
+                          ? Colors.white
+                          : TeveTheme.logoDarkColor.withOpacity(0.45),
+                      width: _searchHasFocus ? 2.2 : 1,
+                    ),
+                  ),
+                  child: TextField(
+                    focusNode: _channelSearchFocusNode,
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    style: TeveTheme.appText(size: 13, weight: FontWeight.w500),
+                    decoration: TeveTheme.waInputDecoration(
+                      hint: 'Search channels',
+                      prefixIcon: Icons.search,
+                      fontSize: 13,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      borderColor: Colors.transparent,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 6),
