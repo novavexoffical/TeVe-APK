@@ -60,13 +60,6 @@ class HomeService {
                     streamByTitle: streamByTitle,
                   ))
               .whereType<ChannelModel>()
-              .where((c) {
-                final hasPlayable = c.url != null && c.url!.trim().isNotEmpty;
-                final isUs = c.countries != null &&
-                    c.countries!.isNotEmpty &&
-                    (c.countries![0].code ?? '').toLowerCase().trim() == 'us';
-                return hasPlayable && isUs;
-              })
               .toList();
 
           if (channels.isNotEmpty) {
@@ -100,13 +93,6 @@ class HomeService {
                   streamByTitle: streamByTitle,
                 ))
             .whereType<ChannelModel>()
-            .where((c) {
-              final hasPlayable = c.url != null && c.url!.trim().isNotEmpty;
-              final isUs = c.countries != null &&
-                  c.countries!.isNotEmpty &&
-                  (c.countries![0].code ?? '').toLowerCase().trim() == 'us';
-              return hasPlayable && isUs;
-            })
             .toList();
         if (cachedChannels.isNotEmpty) {
           debugPrint('fetchChannels fallback: using cached channels');
