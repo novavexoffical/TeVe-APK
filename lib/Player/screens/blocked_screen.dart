@@ -36,6 +36,14 @@ class _BlockedScreenState extends State<BlockedScreen> {
   List<_BlockedEntry> _blocked = [];
   int? _focusedBlockedIndex;
 
+  bool _isActivateKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.select ||
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.gameButtonA;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -216,6 +224,51 @@ class _BlockedScreenState extends State<BlockedScreen> {
     );
   }
 
+  Widget _remoteDialogButton({
+    required Widget child,
+    required VoidCallback onPressed,
+    bool autofocus = false,
+    double width = 100,
+  }) {
+    bool isFocused = false;
+
+    return SizedBox(
+      width: width,
+      child: StatefulBuilder(
+        builder: (context, setInnerState) {
+          return Focus(
+            autofocus: autofocus,
+            onFocusChange: (hasFocus) {
+              setInnerState(() => isFocused = hasFocus);
+            },
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent && _isActivateKey(event.logicalKey)) {
+                onPressed();
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 90),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isFocused ? Colors.white : Colors.transparent,
+                  width: isFocused ? 2.2 : 1,
+                ),
+              ),
+              child: ElevatedButton(
+                style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
+                onPressed: onPressed,
+                child: child,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _showActions(_BlockedEntry item) {
     showDialog(
       context: context,
@@ -227,11 +280,12 @@ class _BlockedScreenState extends State<BlockedScreen> {
         content: Text(item.name,
             style: TeveTheme.appText(size: 14, weight: FontWeight.w500)),
         actions: [
-          TextButton(
+          _remoteDialogButton(
+            autofocus: true,
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          _remoteDialogButton(
             onPressed: () async {
               await _unblock(item);
               if (!mounted) return;

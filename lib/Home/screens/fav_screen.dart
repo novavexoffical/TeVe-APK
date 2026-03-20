@@ -23,6 +23,14 @@ class _FavScreenState extends State<FavScreen> {
   late Future<List<FavModel>> _channels;
   List<FavModel> models = [];
 
+  bool _isActivateKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.select ||
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.gameButtonA;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -120,9 +128,54 @@ class _FavScreenState extends State<FavScreen> {
     );
   }
 
+  Widget _remoteDialogButton({
+    required Widget child,
+    required VoidCallback onPressed,
+    bool autofocus = false,
+    double width = 100,
+  }) {
+    bool isFocused = false;
+
+    return SizedBox(
+      width: width,
+      child: StatefulBuilder(
+        builder: (context, setInnerState) {
+          return Focus(
+            autofocus: autofocus,
+            onFocusChange: (hasFocus) {
+              setInnerState(() => isFocused = hasFocus);
+            },
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent && _isActivateKey(event.logicalKey)) {
+                onPressed();
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 90),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isFocused ? Colors.white : Colors.transparent,
+                  width: isFocused ? 2.2 : 1,
+                ),
+              ),
+              child: ElevatedButton(
+                style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
+                onPressed: onPressed,
+                child: child,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildPopupDialog(BuildContext context, {required FavModel model}) {
     return FocusTraversalGroup(
-      child: AlertDialog(
+        child: AlertDialog(
       backgroundColor: TeveTheme.slightDarkBlue,
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actionsPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
@@ -139,41 +192,31 @@ class _FavScreenState extends State<FavScreen> {
         ],
       ),
       actions: <Widget>[
-        SizedBox(
-          width: 100,
-          child: ElevatedButton(
-            autofocus: true,
-            style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
-            onPressed: () {
-              service
-                  .deleteFavChannel(context: context, model: model)
-                  .then((value) {
-                final snackBar = SnackBar(
-                  content: Text(
-                    value,
-                    style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
-                  ),
-                  backgroundColor: (TeveTheme.slightBlue),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                setState(() {
-                  models.remove(model);
-                });
-                Navigator.of(context).pop();
+        _remoteDialogButton(
+          autofocus: true,
+          onPressed: () {
+            service.deleteFavChannel(context: context, model: model).then((value) {
+              final snackBar = SnackBar(
+                content: Text(
+                  value,
+                  style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
+                ),
+                backgroundColor: (TeveTheme.slightBlue),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              setState(() {
+                models.remove(model);
               });
-            },
-            child: const Text('Yes'),
-          ),
-        ),
-        SizedBox(
-          width: 100,
-          child: ElevatedButton(
-            style: TeveTheme.buttonStyle(backColor: TeveTheme.logoLightColor),
-            onPressed: () {
               Navigator.of(context).pop();
-            },
-            child: const Text('No'),
-          ),
+            });
+          },
+          child: const Text('Yes'),
+        ),
+        _remoteDialogButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('No'),
         ),
       ],
     ));
