@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
@@ -343,6 +342,8 @@ class _ChannelScreenState extends State<ChannelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final visibleModels = filteredModels;
+
     return Scaffold(
       appBar: TeveTheme.teveAppBar(
           child: widget.topWidget,
@@ -457,14 +458,14 @@ class _ChannelScreenState extends State<ChannelScreen> {
                     ),
                   ),
                   Text(
-                    '${filteredModels.length} shown',
+                    '${visibleModels.length} shown',
                     style: TeveTheme.appText(size: 12, weight: FontWeight.w500),
                   )
                 ],
               ),
             ),
             Expanded(
-              child: filteredModels.isEmpty
+              child: visibleModels.isEmpty
                   ? Align(
                       alignment: Alignment.center,
                       child: Column(
@@ -486,9 +487,9 @@ class _ChannelScreenState extends State<ChannelScreen> {
                   : listView
                       ? ListView.builder(
                           padding: const EdgeInsets.all(10),
-                          itemCount: filteredModels.length,
+                          itemCount: visibleModels.length,
                           itemBuilder: (context, index) {
-                            final channel = filteredModels[index];
+                            final channel = visibleModels[index];
                             final isPlayable = _isPlayable(channel);
                             final isBlocked = _isBlocked(channel);
                             return Focus(
@@ -588,67 +589,52 @@ class _ChannelScreenState extends State<ChannelScreen> {
                             );
                           },
                         )
-                      : AnimationLimiter(
-                          child: GridView.count(
-                            key: const PageStorageKey<String>('GridView'),
+                      : GridView.builder(
+                          key: const PageStorageKey<String>('GridView'),
+                          padding: const EdgeInsets.all(10),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
-                            padding: const EdgeInsets.all(10),
                             mainAxisSpacing: 10,
                             crossAxisSpacing: 10,
                             childAspectRatio: 2.6,
-                            physics: const BouncingScrollPhysics(),
-                            children:
-                                List.generate(filteredModels.length, (index) {
-                              final channel = filteredModels[index];
-                              return AnimationConfiguration.staggeredGrid(
-                                position: index,
-                                duration:
-                                    const Duration(seconds: 1, milliseconds: 500),
-                                columnCount: 3,
-                                child: SlideAnimation(
-                                  horizontalOffset: 80.0,
-                                  child: FadeInAnimation(
-                                    child: ChannelCard(
-                                        isPlayable: _isPlayable(channel),
-                                        onFav: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) =>
-                                                _buildPopupDialog(context,
-                                                    model: channel),
-                                          );
-                                        },
-                                        onTap: () {
-                                          _openPlayer(channel);
-                                        },
-                                        isLive: widget.isLive,
-                                        model: ChannelCardModel(
-                                            channel_category: channel
-                                                        .categories !=
-                                                    null &&
-                                                channel.categories!.isNotEmpty
-                                                ? channel.categories![0].name!
-                                                : 'Entertainment',
-                                            channel_name:
-                                                channel.name ?? 'Unknown',
-                                            code: channel.countries != null &&
-                                                    channel.countries!.isNotEmpty
-                                                ? channel.countries![0].code!
-                                                : 'International',
-                                            image_url: channel.logo != null
-                                                ? channel.logo!
-                                                : 'https://i.imgur.com/rzrOS3N.png',
-                                            languages:
-                                                channel.languages != null &&
-                                                        channel.languages!
-                                                            .isNotEmpty
-                                                    ? channel.languages![0].name!
-                                                    : 'None')),
-                                  ),
-                                ),
-                              );
-                            }),
                           ),
+                          itemCount: visibleModels.length,
+                          itemBuilder: (context, index) {
+                            final channel = visibleModels[index];
+                            return ChannelCard(
+                              isPlayable: _isPlayable(channel),
+                              onFav: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      _buildPopupDialog(context, model: channel),
+                                );
+                              },
+                              onTap: () {
+                                _openPlayer(channel);
+                              },
+                              isLive: widget.isLive,
+                              model: ChannelCardModel(
+                                channel_category: channel.categories != null &&
+                                        channel.categories!.isNotEmpty
+                                    ? channel.categories![0].name!
+                                    : 'Entertainment',
+                                channel_name: channel.name ?? 'Unknown',
+                                code: channel.countries != null &&
+                                        channel.countries!.isNotEmpty
+                                    ? channel.countries![0].code!
+                                    : 'International',
+                                image_url: channel.logo != null
+                                    ? channel.logo!
+                                    : 'https://i.imgur.com/rzrOS3N.png',
+                                languages: channel.languages != null &&
+                                        channel.languages!.isNotEmpty
+                                    ? channel.languages![0].name!
+                                    : 'None',
+                              ),
+                            );
+                          },
                         ),
             ),
           ],
