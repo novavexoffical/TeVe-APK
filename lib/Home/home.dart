@@ -94,6 +94,7 @@ class _HomeState extends State<Home> {
               );
             },
             showSettings: true,
+            showFavIcon: false,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
