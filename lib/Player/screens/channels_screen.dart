@@ -35,6 +35,8 @@ class _ChannelScreenState extends State<ChannelScreen> {
   bool playableOnly = true;
   bool listView = false;
   late List<String> categories;
+  final FocusNode _firstCategoryFocusNode = FocusNode();
+  int? _focusedCategoryIndex;
   final Set<String> _blockedStreamKeys = <String>{};
   final Set<String> _favoriteStreamKeys = <String>{};
 
@@ -53,6 +55,15 @@ class _ChannelScreenState extends State<ChannelScreen> {
     categories.insert(0, 'All');
     _loadBlockedStreams();
     _loadFavoriteStreams();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _firstCategoryFocusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _firstCategoryFocusNode.dispose();
+    super.dispose();
   }
 
   Future<void> _loadBlockedStreams() async {
@@ -182,19 +193,46 @@ class _ChannelScreenState extends State<ChannelScreen> {
                   final selected = cat == selectedCategory;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
+                    child: Focus(
+                      focusNode: index == 0 ? _firstCategoryFocusNode : null,
                       autofocus: index == 0,
-                      label: Text(cat),
-                      selected: selected,
-                      onSelected: (_) {
-                        setState(() => selectedCategory = cat);
+                      onFocusChange: (hasFocus) {
+                        setState(() {
+                          if (hasFocus) {
+                            _focusedCategoryIndex = index;
+                          } else if (_focusedCategoryIndex == index) {
+                            _focusedCategoryIndex = null;
+                          }
+                        });
                       },
-                      selectedColor: TeveTheme.logoLightColor,
-                      backgroundColor: TeveTheme.slightDarkBlue,
-                      labelStyle: TeveTheme.appText(
-                        size: 12,
-                        weight: FontWeight.w600,
-                        color: TeveTheme.whiteColor,
+                      onKeyEvent: (node, event) {
+                        if (event is KeyDownEvent &&
+                            (event.logicalKey == LogicalKeyboardKey.enter ||
+                                event.logicalKey == LogicalKeyboardKey.select)) {
+                          setState(() => selectedCategory = cat);
+                          return KeyEventResult.handled;
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: ChoiceChip(
+                        label: Text(cat),
+                        selected: selected,
+                        onSelected: (_) {
+                          setState(() => selectedCategory = cat);
+                        },
+                        side: BorderSide(
+                          color: _focusedCategoryIndex == index
+                              ? TeveTheme.logoLightColor
+                              : Colors.transparent,
+                          width: _focusedCategoryIndex == index ? 2 : 1,
+                        ),
+                        selectedColor: TeveTheme.logoLightColor,
+                        backgroundColor: TeveTheme.slightDarkBlue,
+                        labelStyle: TeveTheme.appText(
+                          size: 12,
+                          weight: FontWeight.w600,
+                          color: TeveTheme.whiteColor,
+                        ),
                       ),
                     ),
                   );
