@@ -34,6 +34,7 @@ class _BlockedEntry {
 class _BlockedScreenState extends State<BlockedScreen> {
   static const String _blockedStreamsKey = 'blocked_streams_v1';
   List<_BlockedEntry> _blocked = [];
+  int? _focusedBlockedIndex;
 
   @override
   void initState() {
@@ -126,8 +127,18 @@ class _BlockedScreenState extends State<BlockedScreen> {
                   itemCount: _blocked.length,
                   itemBuilder: (context, index) {
                     final item = _blocked[index];
+                    final isFocused = _focusedBlockedIndex == index;
                     return Focus(
                       autofocus: index == 0,
+                      onFocusChange: (hasFocus) {
+                        setState(() {
+                          if (hasFocus) {
+                            _focusedBlockedIndex = index;
+                          } else if (_focusedBlockedIndex == index) {
+                            _focusedBlockedIndex = null;
+                          }
+                        });
+                      },
                       onKeyEvent: (node, event) {
                         if (event is KeyDownEvent &&
                             (event.logicalKey == LogicalKeyboardKey.contextMenu ||
@@ -137,47 +148,62 @@ class _BlockedScreenState extends State<BlockedScreen> {
                         }
                         return KeyEventResult.ignored;
                       },
-                      child: Card(
-                        color: TeveTheme.slightDarkBlue,
-                        child: ListTile(
-                          leading: const Icon(Icons.block, color: Colors.redAccent),
-                          title: Text(
-                            item.name,
-                            style: TeveTheme.appText(
-                                size: 14, weight: FontWeight.w600),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 100),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isFocused
+                                ? Colors.white
+                                : TeveTheme.logoDarkColor.withOpacity(0.35),
+                            width: isFocused ? 2.2 : 1,
                           ),
-                          subtitle: Text(
-                            item.category,
-                            style: TeveTheme.appText(
-                                size: 11,
-                                weight: FontWeight.w500,
-                                color: Colors.white70),
-                          ),
-                          trailing: ExcludeFocus(
-                            child: PopupMenuButton<String>(
-                              onSelected: (value) async {
-                                if (value == 'unblock') {
-                                  await _unblock(item);
-                                } else if (value == 'watch' &&
-                                    item.url.trim().isNotEmpty) {
-                                  if (!mounted) return;
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (_) {
-                                    return Player(video_url: item.url);
-                                  }));
-                                }
-                              },
-                              itemBuilder: (ctx) => [
-                                const PopupMenuItem(
-                                  value: 'unblock',
-                                  child: Text('Unblock stream'),
-                                ),
-                                if (item.url.trim().isNotEmpty)
+                        ),
+                        child: Card(
+                          margin: EdgeInsets.zero,
+                          color: TeveTheme.slightDarkBlue,
+                          child: ListTile(
+                            leading:
+                                const Icon(Icons.block, color: Colors.redAccent),
+                            title: Text(
+                              item.name,
+                              style: TeveTheme.appText(
+                                  size: 14, weight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              item.category,
+                              style: TeveTheme.appText(
+                                  size: 11,
+                                  weight: FontWeight.w500,
+                                  color: Colors.white70),
+                            ),
+                            trailing: ExcludeFocus(
+                              child: PopupMenuButton<String>(
+                                onSelected: (value) async {
+                                  if (value == 'unblock') {
+                                    await _unblock(item);
+                                  } else if (value == 'watch' &&
+                                      item.url.trim().isNotEmpty) {
+                                    if (!mounted) return;
+                                    Navigator.push(context,
+                                        MaterialPageRoute(builder: (_) {
+                                      return Player(video_url: item.url);
+                                    }));
+                                  }
+                                },
+                                itemBuilder: (ctx) => [
                                   const PopupMenuItem(
-                                    value: 'watch',
-                                    child: Text('Play anyway'),
+                                    value: 'unblock',
+                                    child: Text('Unblock stream'),
                                   ),
-                              ],
+                                  if (item.url.trim().isNotEmpty)
+                                    const PopupMenuItem(
+                                      value: 'watch',
+                                      child: Text('Play anyway'),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
