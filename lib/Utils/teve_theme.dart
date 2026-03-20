@@ -45,56 +45,6 @@ class TeveTheme {
       IconData settingsIcon = Icons.power_settings_new,
       VoidCallback? onFav,
       VoidCallback? onSettings}) {
-    Widget remoteAppBarIconButton({
-      required IconData icon,
-      required VoidCallback? onPressed,
-      bool autofocus = false,
-    }) {
-      bool isFocused = false;
-      return StatefulBuilder(
-        builder: (context, setInnerState) {
-          return Focus(
-            autofocus: autofocus,
-            onFocusChange: (hasFocus) {
-              setInnerState(() => isFocused = hasFocus);
-            },
-            onKeyEvent: (node, event) {
-              if (event is KeyDownEvent &&
-                  (event.logicalKey == LogicalKeyboardKey.enter ||
-                      event.logicalKey == LogicalKeyboardKey.select)) {
-                if (onPressed != null) onPressed();
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 90),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isFocused ? Colors.white : Colors.transparent,
-                  width: isFocused ? 2.2 : 1,
-                ),
-              ),
-              child: IconButton(
-                onPressed: onPressed,
-                icon: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20)),
-                  child: Icon(
-                    icon,
-                    color: TeveTheme.logoLightColor,
-                    size: 25,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
     return AppBar(
       automaticallyImplyLeading: false,
       title: Row(
@@ -150,7 +100,7 @@ class TeveTheme {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (showFavIcon)
-                      remoteAppBarIconButton(
+                      _RemoteAppBarIconButton(
                         icon: Icons.favorite,
                         onPressed: onFav,
                         autofocus: true,
@@ -160,7 +110,7 @@ class TeveTheme {
                         width: 15,
                       ),
                     if (showPowerIcon)
-                      remoteAppBarIconButton(
+                      _RemoteAppBarIconButton(
                         icon: settingsIcon,
                         onPressed: onSettings,
                       ),
@@ -236,5 +186,66 @@ class TeveTheme {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return ErrorPage(text: text);
     }));
+  }
+}
+
+class _RemoteAppBarIconButton extends StatefulWidget {
+  const _RemoteAppBarIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.autofocus = false,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool autofocus;
+
+  @override
+  State<_RemoteAppBarIconButton> createState() =>
+      _RemoteAppBarIconButtonState();
+}
+
+class _RemoteAppBarIconButtonState extends State<_RemoteAppBarIconButton> {
+  bool _isFocused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      autofocus: widget.autofocus,
+      onFocusChange: (hasFocus) {
+        setState(() => _isFocused = hasFocus);
+      },
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.select)) {
+          if (widget.onPressed != null) widget.onPressed!();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 90),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _isFocused ? Colors.white : Colors.transparent,
+            width: _isFocused ? 2.2 : 1,
+          ),
+        ),
+        child: IconButton(
+          onPressed: widget.onPressed,
+          icon: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+            child: Icon(
+              widget.icon,
+              color: TeveTheme.logoLightColor,
+              size: 25,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

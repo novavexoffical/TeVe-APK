@@ -40,6 +40,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
   late List<String> categories;
   final Set<String> _blockedStreamKeys = <String>{};
   final Set<String> _favoriteStreamKeys = <String>{};
+  bool _viewToggleFocused = false;
 
   @override
   void initState() {
@@ -427,14 +428,40 @@ class _ChannelScreenState extends State<ChannelScreen> {
                     style: TeveTheme.appText(size: 11, weight: FontWeight.w500),
                   ),
                   const Spacer(),
-                  IconButton(
-                    tooltip: listView ? 'Grid view' : 'List view',
-                    onPressed: () => setState(() => listView = !listView),
-                    icon: Icon(
-                      listView
-                          ? Icons.grid_view_rounded
-                          : Icons.view_list_rounded,
-                      color: TeveTheme.whiteColor,
+                  Focus(
+                    onFocusChange: (hasFocus) {
+                      setState(() => _viewToggleFocused = hasFocus);
+                    },
+                    onKeyEvent: (node, event) {
+                      if (event is KeyDownEvent &&
+                          (event.logicalKey == LogicalKeyboardKey.enter ||
+                              event.logicalKey == LogicalKeyboardKey.select)) {
+                        setState(() => listView = !listView);
+                        return KeyEventResult.handled;
+                      }
+                      return KeyEventResult.ignored;
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 90),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: _viewToggleFocused
+                              ? Colors.white
+                              : Colors.transparent,
+                          width: _viewToggleFocused ? 2.2 : 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        tooltip: listView ? 'Grid view' : 'List view',
+                        onPressed: () => setState(() => listView = !listView),
+                        icon: Icon(
+                          listView
+                              ? Icons.grid_view_rounded
+                              : Icons.view_list_rounded,
+                          color: TeveTheme.whiteColor,
+                        ),
+                      ),
                     ),
                   ),
                   Text(
