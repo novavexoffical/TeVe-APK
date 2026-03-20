@@ -6,6 +6,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
+import 'package:teve/Home/screens/fav_screen.dart';
 import 'package:teve/Player/models/channel_card_model.dart';
 import 'package:teve/Player/player.dart';
 import 'package:teve/Player/service/player_service.dart';
@@ -168,7 +169,15 @@ class _ChannelScreenState extends State<ChannelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TeveTheme.teveAppBar(child: widget.topWidget),
+      appBar: TeveTheme.teveAppBar(
+          child: widget.topWidget,
+          showSettings: true,
+          showPowerIcon: false,
+          onFav: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) {
+              return const FavScreen();
+            }));
+          }),
       body: Stack(children: [
         Container(
           decoration: const BoxDecoration(

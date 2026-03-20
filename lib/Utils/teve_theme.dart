@@ -39,6 +39,8 @@ class TeveTheme {
   static AppBar teveAppBar(
       {Widget child = const SizedBox(),
       bool showSettings = false,
+      bool showFavIcon = true,
+      bool showPowerIcon = true,
       VoidCallback? onFav,
       VoidCallback? onSettings}) {
     return AppBar(
@@ -95,35 +97,38 @@ class TeveTheme {
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    IconButton(
-                      onPressed: onFav,
-                      icon: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20)),
-                        child: const Icon(
-                          Icons.favorite,
-                          color: TeveTheme.logoLightColor,
-                          size: 25,
+                    if (showFavIcon)
+                      IconButton(
+                        onPressed: onFav,
+                        icon: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Icon(
+                            Icons.favorite,
+                            color: TeveTheme.logoLightColor,
+                            size: 25,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      width: 15,
-                    ),
-                    IconButton(
-                      onPressed: onSettings,
-                      icon: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20)),
-                        child: const Icon(
-                          Icons.power_settings_new,
-                          color: TeveTheme.logoLightColor,
-                          size: 25,
+                    if (showFavIcon && showPowerIcon)
+                      const SizedBox(
+                        width: 15,
+                      ),
+                    if (showPowerIcon)
+                      IconButton(
+                        onPressed: onSettings,
+                        icon: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Icon(
+                            Icons.power_settings_new,
+                            color: TeveTheme.logoLightColor,
+                            size: 25,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 )
               : const SizedBox()
