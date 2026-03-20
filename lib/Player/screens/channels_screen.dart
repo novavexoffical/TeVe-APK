@@ -237,91 +237,101 @@ class _ChannelScreenState extends State<ChannelScreen> {
                               child: ListView.separated(
                                 primary: false,
                                 shrinkWrap: true,
-                              itemCount: categories.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 5),
-                              itemBuilder: (context, index) {
-                                final cat = categories[index];
-                                final isSelected = cat == selectedCategory;
-                                final isFocused = focusedIndex == index;
+                                itemCount: categories.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 5),
+                                itemBuilder: (context, index) {
+                                  final cat = categories[index];
+                                  final isSelected = cat == selectedCategory;
+                                  final isFocused = focusedIndex == index;
 
-                                void choose() {
-                                  setState(() => selectedCategory = cat);
-                                  Navigator.of(dialogContext).pop();
-                                }
+                                  void choose() {
+                                    setState(() => selectedCategory = cat);
+                                    Navigator.of(dialogContext).pop();
+                                  }
 
-                                return Focus(
-                                  autofocus: index ==
-                                      (focusedIndex >= 0 ? focusedIndex : 0),
-                                  onFocusChange: (hasFocus) {
-                                    if (hasFocus) {
-                                      setModalState(() => focusedIndex = index);
-                                    }
-                                  },
-                                  onKeyEvent: (node, event) {
-                                    if (event is KeyDownEvent &&
-                                        (event.logicalKey ==
-                                                LogicalKeyboardKey.enter ||
-                                            event.logicalKey ==
-                                                LogicalKeyboardKey.select)) {
-                                      choose();
-                                      return KeyEventResult.handled;
-                                    }
-                                    return KeyEventResult.ignored;
-                                  },
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(10),
-                                      onTap: choose,
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 100),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 9),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? TeveTheme.logoLightColor
-                                              : TeveTheme.darkBlue
-                                                  .withOpacity(0.55),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: isFocused
-                                                ? Colors.white
-                                                : (isSelected
-                                                    ? TeveTheme.logoLightColor
-                                                    : Colors.white24),
-                                            width: isFocused ? 2 : 1,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                cat,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TeveTheme.appText(
-                                                  size: 12,
-                                                  weight: FontWeight.w600,
-                                                  color: TeveTheme.whiteColor,
-                                                ).copyWith(
-                                                    decoration:
-                                                        TextDecoration.none),
-                                              ),
+                                  return Focus(
+                                    autofocus: index ==
+                                        (focusedIndex >= 0 ? focusedIndex : 0),
+                                    onFocusChange: (hasFocus) {
+                                      if (hasFocus) {
+                                        setModalState(
+                                            () => focusedIndex = index);
+                                      }
+                                    },
+                                    onKeyEvent: (node, event) {
+                                      if (event is KeyDownEvent &&
+                                          (event.logicalKey ==
+                                                  LogicalKeyboardKey.enter ||
+                                              event.logicalKey ==
+                                                  LogicalKeyboardKey.select)) {
+                                        choose();
+                                        return KeyEventResult.handled;
+                                      }
+                                      return KeyEventResult.ignored;
+                                    },
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(10),
+                                        splashColor: Colors.transparent,
+                                        highlightColor: Colors.transparent,
+                                        focusColor: Colors.transparent,
+                                        hoverColor: Colors.transparent,
+                                        onTap: choose,
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 100),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 9),
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? TeveTheme.logoLightColor
+                                                : TeveTheme.darkBlue
+                                                    .withOpacity(0.55),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: isFocused
+                                                  ? Colors.white
+                                                  : (isSelected
+                                                      ? TeveTheme
+                                                          .logoLightColor
+                                                      : Colors.white24),
+                                              width: isFocused ? 2 : 1,
                                             ),
-                                            if (isSelected)
-                                              const Icon(Icons.check,
-                                                  size: 16,
-                                                  color: TeveTheme.whiteColor),
-                                          ],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  cat,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TeveTheme.appText(
+                                                    size: 12,
+                                                    weight: FontWeight.w600,
+                                                    color:
+                                                        TeveTheme.whiteColor,
+                                                  ).copyWith(
+                                                      decoration:
+                                                          TextDecoration.none),
+                                                ),
+                                              ),
+                                              if (isSelected)
+                                                const Icon(Icons.check,
+                                                    size: 16,
+                                                    color:
+                                                        TeveTheme.whiteColor),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),
