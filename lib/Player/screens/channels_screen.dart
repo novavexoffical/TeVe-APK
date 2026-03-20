@@ -550,31 +550,43 @@ class _ChannelScreenState extends State<ChannelScreen> {
     bool autofocus = false,
     double width = 110,
   }) {
+    bool isFocused = false;
+
     return SizedBox(
       width: width,
-      child: Focus(
-        autofocus: autofocus,
-        onKeyEvent: (node, event) {
-          if (event is KeyDownEvent &&
-              (event.logicalKey == LogicalKeyboardKey.enter ||
-                  event.logicalKey == LogicalKeyboardKey.select)) {
-            onPressed();
-            return KeyEventResult.handled;
-          }
-          return KeyEventResult.ignored;
-        },
-        child: ElevatedButton(
-          style: TeveTheme.buttonStyle(backColor: color).copyWith(
-            side: MaterialStateProperty.resolveWith((states) {
-              if (states.contains(MaterialState.focused)) {
-                return const BorderSide(color: Colors.white, width: 2.4);
+      child: StatefulBuilder(
+        builder: (context, setInnerState) {
+          return Focus(
+            autofocus: autofocus,
+            onFocusChange: (hasFocus) {
+              setInnerState(() => isFocused = hasFocus);
+            },
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent &&
+                  (event.logicalKey == LogicalKeyboardKey.enter ||
+                      event.logicalKey == LogicalKeyboardKey.select)) {
+                onPressed();
+                return KeyEventResult.handled;
               }
-              return const BorderSide(color: Colors.transparent, width: 1);
-            }),
-          ),
-          onPressed: onPressed,
-          child: child,
-        ),
+              return KeyEventResult.ignored;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 90),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isFocused ? Colors.white : Colors.transparent,
+                  width: isFocused ? 2.4 : 1,
+                ),
+              ),
+              child: ElevatedButton(
+                style: TeveTheme.buttonStyle(backColor: color),
+                onPressed: onPressed,
+                child: child,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
