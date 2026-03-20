@@ -178,33 +178,32 @@ class _ChannelScreenState extends State<ChannelScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     int focusedIndex = categories.indexOf(selectedCategory);
 
-    await showDialog(
+    await showDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.18),
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Material(
-              color: Colors.transparent,
-              child: SafeArea(
-                child: Align(
-                  alignment: Alignment.topRight,
+            return SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Material(
+                  color: Colors.transparent,
                   child: Container(
-                  width: 250,
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.68,
-                  ),
-                  margin: const EdgeInsets.only(top: 12, right: 10),
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-                  decoration: BoxDecoration(
-                    color: TeveTheme.slightDarkBlue.withOpacity(0.97),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: TeveTheme.logoDarkColor.withOpacity(0.45),
+                    width: 250,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.68,
                     ),
-                  ),
-                  child: FocusTraversalGroup(
+                    margin: const EdgeInsets.only(top: 12, right: 10),
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                    decoration: BoxDecoration(
+                      color: TeveTheme.slightDarkBlue.withOpacity(0.97),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: TeveTheme.logoDarkColor.withOpacity(0.45),
+                      ),
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -229,110 +228,94 @@ class _ChannelScreenState extends State<ChannelScreen> {
                         ),
                         const SizedBox(height: 8),
                         Flexible(
-                          child: Focus(
-                            canRequestFocus: false,
-                            skipTraversal: true,
-                            child: Scrollbar(
-                              thumbVisibility: true,
-                              child: ListView.separated(
-                                primary: false,
-                                shrinkWrap: true,
-                                itemCount: categories.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 5),
-                                itemBuilder: (context, index) {
-                                  final cat = categories[index];
-                                  final isSelected = cat == selectedCategory;
-                                  final isFocused = focusedIndex == index;
+                          child: ListView.separated(
+                            primary: false,
+                            shrinkWrap: true,
+                            itemCount: categories.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 5),
+                            itemBuilder: (context, index) {
+                              final cat = categories[index];
+                              final isSelected = cat == selectedCategory;
+                              final isFocused = focusedIndex == index;
 
-                                  void choose() {
-                                    setState(() => selectedCategory = cat);
-                                    Navigator.of(dialogContext).pop();
+                              void choose() {
+                                setState(() => selectedCategory = cat);
+                                Navigator.of(dialogContext).pop();
+                              }
+
+                              return Focus(
+                                autofocus: index ==
+                                    (focusedIndex >= 0 ? focusedIndex : 0),
+                                onFocusChange: (hasFocus) {
+                                  if (hasFocus) {
+                                    setModalState(() => focusedIndex = index);
                                   }
-
-                                  return Focus(
-                                    autofocus: index ==
-                                        (focusedIndex >= 0 ? focusedIndex : 0),
-                                    onFocusChange: (hasFocus) {
-                                      if (hasFocus) {
-                                        setModalState(
-                                            () => focusedIndex = index);
-                                      }
-                                    },
-                                    onKeyEvent: (node, event) {
-                                      if (event is KeyDownEvent &&
-                                          (event.logicalKey ==
-                                                  LogicalKeyboardKey.enter ||
-                                              event.logicalKey ==
-                                                  LogicalKeyboardKey.select)) {
-                                        choose();
-                                        return KeyEventResult.handled;
-                                      }
-                                      return KeyEventResult.ignored;
-                                    },
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(10),
-                                        splashColor: Colors.transparent,
-                                        highlightColor: Colors.transparent,
-                                        focusColor: Colors.transparent,
-                                        hoverColor: Colors.transparent,
-                                        onTap: choose,
-                                        child: AnimatedContainer(
-                                          duration:
-                                              const Duration(milliseconds: 100),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 9),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
+                                },
+                                onKeyEvent: (node, event) {
+                                  if (event is KeyDownEvent &&
+                                      (event.logicalKey ==
+                                              LogicalKeyboardKey.enter ||
+                                          event.logicalKey ==
+                                              LogicalKeyboardKey.select)) {
+                                    choose();
+                                    return KeyEventResult.handled;
+                                  }
+                                  return KeyEventResult.ignored;
+                                },
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(10),
+                                  splashColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  onTap: choose,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 100),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 9),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? TeveTheme.logoLightColor
+                                          : TeveTheme.darkBlue.withOpacity(0.55),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isFocused
+                                            ? Colors.white
+                                            : (isSelected
                                                 ? TeveTheme.logoLightColor
-                                                : TeveTheme.darkBlue
-                                                    .withOpacity(0.55),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            border: Border.all(
-                                              color: isFocused
-                                                  ? Colors.white
-                                                  : (isSelected
-                                                      ? TeveTheme
-                                                          .logoLightColor
-                                                      : Colors.white24),
-                                              width: isFocused ? 2 : 1,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  cat,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TeveTheme.appText(
-                                                    size: 12,
-                                                    weight: FontWeight.w600,
-                                                    color:
-                                                        TeveTheme.whiteColor,
-                                                  ).copyWith(
-                                                      decoration:
-                                                          TextDecoration.none),
-                                                ),
-                                              ),
-                                              if (isSelected)
-                                                const Icon(Icons.check,
-                                                    size: 16,
-                                                    color:
-                                                        TeveTheme.whiteColor),
-                                            ],
-                                          ),
-                                        ),
+                                                : Colors.white24),
+                                        width: isFocused ? 2 : 1,
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            cat,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TeveTheme.appText(
+                                              size: 12,
+                                              weight: FontWeight.w600,
+                                              color: TeveTheme.whiteColor,
+                                            ).copyWith(
+                                                decoration:
+                                                    TextDecoration.none),
+                                          ),
+                                        ),
+                                        if (isSelected)
+                                          const Icon(
+                                            Icons.check,
+                                            size: 16,
+                                            color: TeveTheme.whiteColor,
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
