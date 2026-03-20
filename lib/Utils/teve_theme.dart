@@ -41,6 +41,7 @@ class TeveTheme {
       bool showSettings = false,
       bool showFavIcon = true,
       bool showPowerIcon = true,
+      IconData settingsIcon = Icons.power_settings_new,
       VoidCallback? onFav,
       VoidCallback? onSettings}) {
     return AppBar(
@@ -122,8 +123,8 @@ class TeveTheme {
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20)),
-                          child: const Icon(
-                            Icons.power_settings_new,
+                          child: Icon(
+                            settingsIcon,
                             color: TeveTheme.logoLightColor,
                             size: 25,
                           ),

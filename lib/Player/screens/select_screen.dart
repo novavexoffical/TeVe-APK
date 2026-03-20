@@ -360,7 +360,14 @@ class _SelectScreenState extends State<SelectScreen> {
     final countries = _filteredCountries;
 
     return Scaffold(
-      appBar: TeveTheme.teveAppBar(child: widget.topWidget),
+      appBar: TeveTheme.teveAppBar(
+        child: widget.topWidget,
+        showSettings: true,
+        showFavIcon: false,
+        showPowerIcon: true,
+        settingsIcon: Icons.settings,
+        onSettings: _openCountryVisibilitySettings,
+      ),
       body: Stack(children: [
         Container(
           decoration: const BoxDecoration(
@@ -404,43 +411,7 @@ class _SelectScreenState extends State<SelectScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    FilterChip(
-                      label: Text(
-                        'Playable only',
-                        style:
-                            TeveTheme.appText(size: 12, weight: FontWeight.w600),
-                      ),
-                      selected: _playableOnly,
-                      onSelected: (val) {
-                        setState(() {
-                          _playableOnly = val;
-                        });
-                      },
-                      selectedColor: TeveTheme.logoLightColor,
-                      backgroundColor: TeveTheme.slightDarkBlue,
-                    ),
-                    const SizedBox(width: 6),
-                    Focus(
-                      onKeyEvent: (node, event) {
-                        if (event is KeyDownEvent &&
-                            (event.logicalKey == LogicalKeyboardKey.select ||
-                                event.logicalKey ==
-                                    LogicalKeyboardKey.enter)) {
-                          _openCountryVisibilitySettings();
-                          return KeyEventResult.handled;
-                        }
-                        return KeyEventResult.ignored;
-                      },
-                      child: IconButton(
-                        tooltip: 'Country display settings',
-                        onPressed: _openCountryVisibilitySettings,
-                        icon: const Icon(
-                          Icons.settings,
-                          color: TeveTheme.logoLightColor,
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
