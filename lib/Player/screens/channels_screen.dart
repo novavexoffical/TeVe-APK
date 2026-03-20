@@ -59,6 +59,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
     categories.insert(0, 'All');
     _loadBlockedStreams();
     _loadFavoriteStreams();
+    _channelSearchFocusNode.skipTraversal = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _firstCategoryFocusNode.requestFocus();
     });
@@ -271,6 +272,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
                       (event.logicalKey == LogicalKeyboardKey.select ||
                           event.logicalKey == LogicalKeyboardKey.enter)) {
                     _channelSearchFocusNode.requestFocus();
+                    SystemChannels.textInput.invokeMethod('TextInput.show');
                     return KeyEventResult.handled;
                   }
                   return KeyEventResult.ignored;
