@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:teve/Utils/error_page.dart';
 
@@ -44,6 +45,56 @@ class TeveTheme {
       IconData settingsIcon = Icons.power_settings_new,
       VoidCallback? onFav,
       VoidCallback? onSettings}) {
+    Widget remoteAppBarIconButton({
+      required IconData icon,
+      required VoidCallback? onPressed,
+      bool autofocus = false,
+    }) {
+      bool isFocused = false;
+      return StatefulBuilder(
+        builder: (context, setInnerState) {
+          return Focus(
+            autofocus: autofocus,
+            onFocusChange: (hasFocus) {
+              setInnerState(() => isFocused = hasFocus);
+            },
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent &&
+                  (event.logicalKey == LogicalKeyboardKey.enter ||
+                      event.logicalKey == LogicalKeyboardKey.select)) {
+                if (onPressed != null) onPressed();
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 90),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isFocused ? Colors.white : Colors.transparent,
+                  width: isFocused ? 2.2 : 1,
+                ),
+              ),
+              child: IconButton(
+                onPressed: onPressed,
+                icon: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Icon(
+                    icon,
+                    color: TeveTheme.logoLightColor,
+                    size: 25,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     return AppBar(
       automaticallyImplyLeading: false,
       title: Row(
@@ -99,36 +150,19 @@ class TeveTheme {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (showFavIcon)
-                      IconButton(
+                      remoteAppBarIconButton(
+                        icon: Icons.favorite,
                         onPressed: onFav,
-                        icon: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20)),
-                          child: const Icon(
-                            Icons.favorite,
-                            color: TeveTheme.logoLightColor,
-                            size: 25,
-                          ),
-                        ),
+                        autofocus: true,
                       ),
                     if (showFavIcon && showPowerIcon)
                       const SizedBox(
                         width: 15,
                       ),
                     if (showPowerIcon)
-                      IconButton(
+                      remoteAppBarIconButton(
+                        icon: settingsIcon,
                         onPressed: onSettings,
-                        icon: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20)),
-                          child: Icon(
-                            settingsIcon,
-                            color: TeveTheme.logoLightColor,
-                            size: 25,
-                          ),
-                        ),
                       ),
                   ],
                 )
