@@ -210,15 +210,17 @@ class _ChannelScreenState extends State<ChannelScreen> {
                           Text(
                             'Categories',
                             style: TeveTheme.appText(
-                                size: 13, weight: FontWeight.w700),
+                                    size: 13, weight: FontWeight.w700)
+                                .copyWith(decoration: TextDecoration.none),
                           ),
                           const Spacer(),
                           Text(
                             selectedCategory,
                             style: TeveTheme.appText(
-                                size: 11,
-                                weight: FontWeight.w500,
-                                color: Colors.white70),
+                                    size: 11,
+                                    weight: FontWeight.w500,
+                                    color: Colors.white70)
+                                .copyWith(decoration: TextDecoration.none),
                           ),
                         ],
                       ),
@@ -296,7 +298,9 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                               size: 12,
                                               weight: FontWeight.w600,
                                               color: TeveTheme.whiteColor,
-                                            ),
+                                            ).copyWith(
+                                                decoration:
+                                                    TextDecoration.none),
                                           ),
                                         ),
                                         if (isSelected)
