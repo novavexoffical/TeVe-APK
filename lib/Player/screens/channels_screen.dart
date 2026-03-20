@@ -174,6 +174,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
   }
 
   Future<void> _openCategoriesPopup() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     int focusedIndex = categories.indexOf(selectedCategory);
 
     await showDialog(
@@ -183,10 +184,12 @@ class _ChannelScreenState extends State<ChannelScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return SafeArea(
-              child: Align(
-                alignment: Alignment.topRight,
-                child: Container(
+            return Material(
+              color: Colors.transparent,
+              child: SafeArea(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
                   width: 250,
                   constraints: BoxConstraints(
                     maxHeight: MediaQuery.of(context).size.height * 0.68,
@@ -209,24 +212,30 @@ class _ChannelScreenState extends State<ChannelScreen> {
                             Text(
                               'Categories',
                               style: TeveTheme.appText(
-                                  size: 13, weight: FontWeight.w700),
+                                      size: 13, weight: FontWeight.w700)
+                                  .copyWith(decoration: TextDecoration.none),
                             ),
                             const Spacer(),
                             Text(
                               selectedCategory,
                               style: TeveTheme.appText(
-                                  size: 11,
-                                  weight: FontWeight.w500,
-                                  color: Colors.white70),
+                                      size: 11,
+                                      weight: FontWeight.w500,
+                                      color: Colors.white70)
+                                  .copyWith(decoration: TextDecoration.none),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Flexible(
-                          child: Scrollbar(
-                            thumbVisibility: true,
-                            child: ListView.separated(
-                              shrinkWrap: true,
+                          child: Focus(
+                            canRequestFocus: false,
+                            skipTraversal: true,
+                            child: Scrollbar(
+                              thumbVisibility: true,
+                              child: ListView.separated(
+                                primary: false,
+                                shrinkWrap: true,
                               itemCount: categories.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: 5),
@@ -259,48 +268,54 @@ class _ChannelScreenState extends State<ChannelScreen> {
                                     }
                                     return KeyEventResult.ignored;
                                   },
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(10),
-                                    onTap: choose,
-                                    child: AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 100),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 9),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? TeveTheme.logoLightColor
-                                            : TeveTheme.darkBlue
-                                                .withOpacity(0.55),
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: isFocused
-                                              ? Colors.white
-                                              : (isSelected
-                                                  ? TeveTheme.logoLightColor
-                                                  : Colors.white24),
-                                          width: isFocused ? 2 : 1,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(10),
+                                      onTap: choose,
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 100),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 9),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? TeveTheme.logoLightColor
+                                              : TeveTheme.darkBlue
+                                                  .withOpacity(0.55),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: isFocused
+                                                ? Colors.white
+                                                : (isSelected
+                                                    ? TeveTheme.logoLightColor
+                                                    : Colors.white24),
+                                            width: isFocused ? 2 : 1,
+                                          ),
                                         ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              cat,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TeveTheme.appText(
-                                                size: 12,
-                                                weight: FontWeight.w600,
-                                                color: TeveTheme.whiteColor,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                cat,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TeveTheme.appText(
+                                                  size: 12,
+                                                  weight: FontWeight.w600,
+                                                  color: TeveTheme.whiteColor,
+                                                ).copyWith(
+                                                    decoration:
+                                                        TextDecoration.none),
                                               ),
                                             ),
-                                          ),
-                                          if (isSelected)
-                                            const Icon(Icons.check,
-                                                size: 16,
-                                                color: TeveTheme.whiteColor),
-                                        ],
+                                            if (isSelected)
+                                              const Icon(Icons.check,
+                                                  size: 16,
+                                                  color: TeveTheme.whiteColor),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
