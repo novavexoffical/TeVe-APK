@@ -509,7 +509,14 @@ class _ChannelScreenState extends State<ChannelScreen> {
           return KeyEventResult.ignored;
         },
         child: ElevatedButton(
-          style: TeveTheme.buttonStyle(backColor: color),
+          style: TeveTheme.buttonStyle(backColor: color).copyWith(
+            side: MaterialStateProperty.resolveWith((states) {
+              if (states.contains(MaterialState.focused)) {
+                return const BorderSide(color: Colors.white, width: 2.4);
+              }
+              return const BorderSide(color: Colors.transparent, width: 1);
+            }),
+          ),
           onPressed: onPressed,
           child: child,
         ),
