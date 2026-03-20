@@ -47,9 +47,14 @@ class ChannelModel {
   }
 
   Map<String, dynamic> toJson() {
+    String category = 'General';
+    if (categories != null && categories!.isNotEmpty) {
+      category = categories![0].name ?? 'General';
+    }
+
     return {
       "stream_link": url,
-      "category": categories![0].name,
+      "category": category,
       "channel_name": name
     };
   }

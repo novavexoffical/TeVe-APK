@@ -31,6 +31,14 @@ class ChannelScreen extends StatefulWidget {
 class _ChannelScreenState extends State<ChannelScreen> {
   static const String _blockedStreamsKey = 'blocked_streams_v1';
 
+  bool _isActivateKey(LogicalKeyboardKey key) {
+    return key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.select ||
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.gameButtonA;
+  }
+
   PlayerService service = PlayerService();
   String selectedCategory = 'All';
   bool playableOnly = true;
@@ -689,9 +697,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
               setInnerState(() => isFocused = hasFocus);
             },
             onKeyEvent: (node, event) {
-              if (event is KeyDownEvent &&
-                  (event.logicalKey == LogicalKeyboardKey.enter ||
-                      event.logicalKey == LogicalKeyboardKey.select)) {
+              if (event is KeyDownEvent && _isActivateKey(event.logicalKey)) {
                 onPressed();
                 return KeyEventResult.handled;
               }
