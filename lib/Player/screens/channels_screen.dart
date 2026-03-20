@@ -175,13 +175,11 @@ class _ChannelScreenState extends State<ChannelScreen> {
   Future<void> _openCategoriesPopup() async {
     int focusedIndex = categories.indexOf(selectedCategory);
 
-    await showGeneralDialog(
+    await showDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Categories',
       barrierColor: Colors.black.withOpacity(0.18),
-      transitionDuration: const Duration(milliseconds: 130),
-      pageBuilder: (context, _, __) {
+      builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return SafeArea(
@@ -201,140 +199,122 @@ class _ChannelScreenState extends State<ChannelScreen> {
                       color: TeveTheme.logoDarkColor.withOpacity(0.45),
                     ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Categories',
-                            style: TeveTheme.appText(
-                                    size: 13, weight: FontWeight.w700)
-                                .copyWith(decoration: TextDecoration.none),
-                          ),
-                          const Spacer(),
-                          Text(
-                            selectedCategory,
-                            style: TeveTheme.appText(
-                                    size: 11,
-                                    weight: FontWeight.w500,
-                                    color: Colors.white70)
-                                .copyWith(decoration: TextDecoration.none),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Flexible(
-                        child: Scrollbar(
-                          thumbVisibility: true,
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            itemCount: categories.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 5),
-                            itemBuilder: (context, index) {
-                              final cat = categories[index];
-                              final isSelected = cat == selectedCategory;
-                              final isFocused = focusedIndex == index;
+                  child: FocusTraversalGroup(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Categories',
+                              style: TeveTheme.appText(
+                                  size: 13, weight: FontWeight.w700),
+                            ),
+                            const Spacer(),
+                            Text(
+                              selectedCategory,
+                              style: TeveTheme.appText(
+                                  size: 11,
+                                  weight: FontWeight.w500,
+                                  color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Flexible(
+                          child: Scrollbar(
+                            thumbVisibility: true,
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: categories.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 5),
+                              itemBuilder: (context, index) {
+                                final cat = categories[index];
+                                final isSelected = cat == selectedCategory;
+                                final isFocused = focusedIndex == index;
 
-                              void choose() {
-                                setState(() => selectedCategory = cat);
-                                Navigator.of(context).pop();
-                              }
+                                void choose() {
+                                  setState(() => selectedCategory = cat);
+                                  Navigator.of(dialogContext).pop();
+                                }
 
-                              return FocusableActionDetector(
-                                autofocus: index ==
-                                    (focusedIndex >= 0 ? focusedIndex : 0),
-                                onFocusChange: (hasFocus) {
-                                  if (hasFocus) {
-                                    setModalState(() => focusedIndex = index);
-                                  }
-                                },
-                                shortcuts: const <ShortcutActivator, Intent>{
-                                  SingleActivator(LogicalKeyboardKey.enter):
-                                      ActivateIntent(),
-                                  SingleActivator(LogicalKeyboardKey.select):
-                                      ActivateIntent(),
-                                },
-                                actions: <Type, Action<Intent>>{
-                                  ActivateIntent:
-                                      CallbackAction<ActivateIntent>(
-                                    onInvoke: (intent) {
+                                return Focus(
+                                  autofocus: index ==
+                                      (focusedIndex >= 0 ? focusedIndex : 0),
+                                  onFocusChange: (hasFocus) {
+                                    if (hasFocus) {
+                                      setModalState(() => focusedIndex = index);
+                                    }
+                                  },
+                                  onKeyEvent: (node, event) {
+                                    if (event is KeyDownEvent &&
+                                        (event.logicalKey ==
+                                                LogicalKeyboardKey.enter ||
+                                            event.logicalKey ==
+                                                LogicalKeyboardKey.select)) {
                                       choose();
-                                      return null;
-                                    },
-                                  ),
-                                },
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(10),
-                                  onTap: choose,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 100),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 9),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? TeveTheme.logoLightColor
-                                          : TeveTheme.darkBlue.withOpacity(0.55),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: isFocused
-                                            ? Colors.white
-                                            : (isSelected
-                                                ? TeveTheme.logoLightColor
-                                                : Colors.white24),
-                                        width: isFocused ? 2 : 1,
+                                      return KeyEventResult.handled;
+                                    }
+                                    return KeyEventResult.ignored;
+                                  },
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(10),
+                                    onTap: choose,
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 100),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 9),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? TeveTheme.logoLightColor
+                                            : TeveTheme.darkBlue
+                                                .withOpacity(0.55),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isFocused
+                                              ? Colors.white
+                                              : (isSelected
+                                                  ? TeveTheme.logoLightColor
+                                                  : Colors.white24),
+                                          width: isFocused ? 2 : 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              cat,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TeveTheme.appText(
+                                                size: 12,
+                                                weight: FontWeight.w600,
+                                                color: TeveTheme.whiteColor,
+                                              ),
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            const Icon(Icons.check,
+                                                size: 16,
+                                                color: TeveTheme.whiteColor),
+                                        ],
                                       ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            cat,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TeveTheme.appText(
-                                              size: 12,
-                                              weight: FontWeight.w600,
-                                              color: TeveTheme.whiteColor,
-                                            ).copyWith(
-                                                decoration:
-                                                    TextDecoration.none),
-                                          ),
-                                        ),
-                                        if (isSelected)
-                                          const Icon(Icons.check,
-                                              size: 16,
-                                              color: TeveTheme.whiteColor),
-                                      ],
-                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             );
           },
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curved = CurvedAnimation(
-            parent: animation, curve: Curves.easeOutCubic);
-        return FadeTransition(
-          opacity: curved,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.08, -0.03),
-              end: Offset.zero,
-            ).animate(curved),
-            child: child,
-          ),
         );
       },
     );
