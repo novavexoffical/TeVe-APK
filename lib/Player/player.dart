@@ -22,7 +22,6 @@ class _PlayerState extends State<Player> {
     deviceOrientationsOnFullScreen: const [
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
-      DeviceOrientation.portraitUp,
     ],
     deviceOrientationsAfterFullScreen: const [
       DeviceOrientation.portraitUp,
