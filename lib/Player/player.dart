@@ -17,6 +17,8 @@ class Player extends StatefulWidget {
 class _PlayerState extends State<Player> {
   var betterPlayerConfiguration = BetterPlayerConfiguration(
     autoPlay: true,
+    expandToFill: true,
+    fit: BoxFit.cover,
     deviceOrientationsOnFullScreen: const [
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -45,9 +47,12 @@ class _PlayerState extends State<Player> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-        child: SafeArea(
-          child: BetterPlayer.network(widget.video_url,
-              betterPlayerConfiguration: betterPlayerConfiguration),
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: SizedBox.expand(
+            child: BetterPlayer.network(widget.video_url,
+                betterPlayerConfiguration: betterPlayerConfiguration),
+          ),
         ),
         onWillPop: () async {
           Navigator.pop(context);
