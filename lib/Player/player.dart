@@ -53,7 +53,6 @@ class _PlayerState extends State<Player> {
       aspectRatio: screenAspectRatio,
       fullScreenAspectRatio: screenAspectRatio,
       fit: BoxFit.fill,
-      autoDetectFullscreenAspectRatio: false,
       autoDetectFullscreenDeviceOrientation: false,
     );
 
