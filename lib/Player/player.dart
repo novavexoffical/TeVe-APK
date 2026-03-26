@@ -45,12 +45,24 @@ class _PlayerState extends State<Player> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final screenAspectRatio =
+        size.height == 0 ? (16 / 9) : (size.width / size.height);
+
+    final configuredPlayer = betterPlayerConfiguration.copyWith(
+      aspectRatio: screenAspectRatio,
+      fullScreenAspectRatio: screenAspectRatio,
+      fit: BoxFit.fill,
+      autoDetectFullscreenAspectRatio: false,
+      autoDetectFullscreenDeviceOrientation: false,
+    );
+
     return WillPopScope(
         child: Scaffold(
           backgroundColor: Colors.black,
           body: SizedBox.expand(
             child: BetterPlayer.network(widget.video_url,
-                betterPlayerConfiguration: betterPlayerConfiguration),
+                betterPlayerConfiguration: configuredPlayer),
           ),
         ),
         onWillPop: () async {
