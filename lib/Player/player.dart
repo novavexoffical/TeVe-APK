@@ -54,6 +54,7 @@ class _PlayerState extends State<Player> {
       fullScreenAspectRatio: screenAspectRatio,
       fit: BoxFit.fill,
       autoDetectFullscreenDeviceOrientation: false,
+      fullScreenByDefault: true,
     );
 
     return WillPopScope(
