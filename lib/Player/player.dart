@@ -49,12 +49,14 @@ class _PlayerState extends State<Player> {
     final screenAspectRatio =
         size.height == 0 ? (16 / 9) : (size.width / size.height);
 
+    final isTV = size.shortestSide >= 600 && size.width >= 900;
+
     final configuredPlayer = betterPlayerConfiguration.copyWith(
       aspectRatio: screenAspectRatio,
       fullScreenAspectRatio: screenAspectRatio,
       fit: BoxFit.fill,
       autoDetectFullscreenDeviceOrientation: false,
-      fullScreenByDefault: true,
+      fullScreenByDefault: isTV,
     );
 
     return WillPopScope(
