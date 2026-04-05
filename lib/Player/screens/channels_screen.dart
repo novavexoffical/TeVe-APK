@@ -1,5 +1,7 @@
 // ignore_for_file: must_be_immutable, unused_element
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
@@ -50,6 +52,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
   final Set<String> _blockedStreamKeys = <String>{};
   final Set<String> _favoriteStreamKeys = <String>{};
   bool _viewToggleFocused = false;
+  Timer? _longPressTimer;
 
   @override
   void initState() {
@@ -71,6 +74,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
 
   @override
   void dispose() {
+    _longPressTimer?.cancel();
     _searchController.dispose();
     _channelSearchFocusNode.dispose();
     super.dispose();
@@ -530,14 +534,34 @@ class _ChannelScreenState extends State<ChannelScreen> {
                             return Focus(
                               autofocus: index == 0,
                               onKeyEvent: (node, event) {
-                                if (event is KeyDownEvent) {
-                                  if (event.logicalKey ==
-                                          LogicalKeyboardKey.enter ||
-                                      event.logicalKey ==
-                                          LogicalKeyboardKey.select) {
-                                    _openPlayer(channel);
+                                if (event.logicalKey ==
+                                        LogicalKeyboardKey.enter ||
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.select) {
+                                  if (event is KeyDownEvent) {
+                                    _longPressTimer = Timer(
+                                        const Duration(milliseconds: 600), () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            _buildPopupDialog(context,
+                                                model: channel),
+                                      );
+                                    });
                                     return KeyEventResult.handled;
                                   }
+                                  if (event is KeyUpEvent) {
+                                    if (_longPressTimer?.isActive ?? false) {
+                                      _longPressTimer?.cancel();
+                                      _openPlayer(channel);
+                                    }
+                                    return KeyEventResult.handled;
+                                  }
+                                  if (event is KeyRepeatEvent) {
+                                    return KeyEventResult.handled;
+                                  }
+                                }
+                                if (event is KeyDownEvent) {
                                   if (event.logicalKey ==
                                           LogicalKeyboardKey.contextMenu ||
                                       event.logicalKey ==

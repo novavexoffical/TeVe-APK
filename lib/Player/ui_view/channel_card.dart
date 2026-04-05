@@ -1,5 +1,7 @@
 // ignore_for_file: must_be_immutable
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:teve/Player/models/channel_card_model.dart';
@@ -26,18 +28,41 @@ class ChannelCard extends StatefulWidget {
 
 class _ChannelCardState extends State<ChannelCard> {
   bool _isFocused = false;
+  Timer? _longPressTimer;
+
+  @override
+  void dispose() {
+    _longPressTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Focus(
-      onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) _longPressTimer?.cancel();
+        setState(() => _isFocused = hasFocus);
+      },
       onKeyEvent: (node, event) {
-        if (event is KeyDownEvent) {
-          if (event.logicalKey == LogicalKeyboardKey.enter ||
-              event.logicalKey == LogicalKeyboardKey.select) {
-            widget.onTap();
+        if (event.logicalKey == LogicalKeyboardKey.enter ||
+            event.logicalKey == LogicalKeyboardKey.select) {
+          if (event is KeyDownEvent) {
+            _longPressTimer =
+                Timer(const Duration(milliseconds: 600), widget.onFav);
             return KeyEventResult.handled;
           }
+          if (event is KeyUpEvent) {
+            if (_longPressTimer?.isActive ?? false) {
+              _longPressTimer?.cancel();
+              widget.onTap();
+            }
+            return KeyEventResult.handled;
+          }
+          if (event is KeyRepeatEvent) {
+            return KeyEventResult.handled;
+          }
+        }
+        if (event is KeyDownEvent) {
           if (event.logicalKey == LogicalKeyboardKey.contextMenu ||
               event.logicalKey == LogicalKeyboardKey.info) {
             widget.onFav();
@@ -48,6 +73,7 @@ class _ChannelCardState extends State<ChannelCard> {
       },
       child: GestureDetector(
         onTap: widget.onTap,
+        onLongPress: widget.onFav,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
