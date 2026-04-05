@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teve/Home/models/channel_model.dart';
@@ -54,6 +55,10 @@ class _ChannelScreenState extends State<ChannelScreen> {
   bool _viewToggleFocused = false;
   Timer? _longPressTimer;
 
+  // null = not checked yet, true = reachable, false = unreachable
+  final Map<String, bool?> _streamReachable = {};
+  bool _streamCheckDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +75,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
     _loadBlockedStreams();
     _loadFavoriteStreams();
     _channelSearchFocusNode.skipTraversal = true;
+    _checkStreamReachability();
   }
 
   @override
@@ -106,6 +112,41 @@ class _ChannelScreenState extends State<ChannelScreen> {
     });
   }
 
+  Future<void> _checkStreamReachability() async {
+    final urls = widget.models
+        .map((m) => m.url?.trim())
+        .where((u) => u != null && u.isNotEmpty)
+        .toSet()
+        .cast<String>()
+        .toList();
+
+    const batchSize = 10;
+    const timeout = Duration(seconds: 5);
+
+    for (int i = 0; i < urls.length; i += batchSize) {
+      if (!mounted) return;
+      final batch = urls.sublist(i,
+          i + batchSize > urls.length ? urls.length : i + batchSize);
+
+      await Future.wait(batch.map((url) async {
+        bool reachable = false;
+        try {
+          final response = await http
+              .head(Uri.parse(url))
+              .timeout(timeout);
+          reachable = response.statusCode < 400;
+        } catch (_) {
+          reachable = false;
+        }
+        if (mounted) {
+          setState(() => _streamReachable[url] = reachable);
+        }
+      }));
+    }
+
+    if (mounted) setState(() => _streamCheckDone = true);
+  }
+
   String _channelKey(ChannelModel channel) {
     final name = channel.name ?? 'unknown';
     final url = (channel.url ?? '').trim();
@@ -121,7 +162,11 @@ class _ChannelScreenState extends State<ChannelScreen> {
   }
 
   bool _isPlayable(ChannelModel channel) {
-    return _hasStream(channel) && !_isBlocked(channel);
+    if (!_hasStream(channel) || _isBlocked(channel)) return false;
+    final url = channel.url!.trim();
+    // If check is done and stream was unreachable, filter it out
+    if (_streamCheckDone && _streamReachable[url] == false) return false;
+    return true;
   }
 
   bool _isFavorite(ChannelModel channel) {
@@ -459,6 +504,18 @@ class _ChannelScreenState extends State<ChannelScreen> {
                         : 'Blocked: ${_blockedStreamKeys.length}',
                     style: TeveTheme.appText(size: 11, weight: FontWeight.w500),
                   ),
+                  if (!_streamCheckDone) ...[
+                    const SizedBox(width: 8),
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                    ),
+                    const SizedBox(width: 4),
+                    Text('Checking streams…',
+                        style:
+                            TeveTheme.appText(size: 10, weight: FontWeight.w400)),
+                  ],
                   const Spacer(),
                   Focus(
                     onFocusChange: (hasFocus) {
