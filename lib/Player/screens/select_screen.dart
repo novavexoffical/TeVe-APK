@@ -128,6 +128,43 @@ class _SelectScreenState extends State<SelectScreen> {
     Set<String> temp = {...initial};
     int focusedModalIndex = -1;
 
+    Widget remoteButton({
+      required String label,
+      required VoidCallback onPressed,
+      bool isElevated = false,
+      bool autofocus = false,
+    }) {
+      return StatefulBuilder(builder: (context, setBtn) {
+        bool focused = false;
+        return Focus(
+          autofocus: autofocus,
+          onFocusChange: (hasFocus) => setBtn(() => focused = hasFocus),
+          onKeyEvent: (node, event) {
+            if (event is KeyDownEvent &&
+                (event.logicalKey == LogicalKeyboardKey.enter ||
+                    event.logicalKey == LogicalKeyboardKey.select)) {
+              onPressed();
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 80),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: focused ? Colors.white : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: isElevated
+                ? ElevatedButton(onPressed: onPressed, child: Text(label))
+                : TextButton(onPressed: onPressed, child: Text(label)),
+          ),
+        );
+      });
+    }
+
     await showDialog(
       context: context,
       builder: (ctx) {
@@ -148,17 +185,17 @@ class _SelectScreenState extends State<SelectScreen> {
                     style: TeveTheme.appText(size: 16, weight: FontWeight.w700),
                   ),
                 ),
-                TextButton(
+                remoteButton(
+                  label: 'All',
                   onPressed: () => setModalState(() {
                     temp = all.map((e) => e.code.toLowerCase()).toSet();
                   }),
-                  child: const Text('All'),
                 ),
-                TextButton(
+                remoteButton(
+                  label: 'None',
                   onPressed: () => setModalState(() {
                     temp = <String>{};
                   }),
-                  child: const Text('None'),
                 ),
               ],
             ),
@@ -295,11 +332,14 @@ class _SelectScreenState extends State<SelectScreen> {
               ),
             ),
             actions: [
-              TextButton(
+              remoteButton(
+                label: 'Cancel',
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
               ),
-              ElevatedButton(
+              remoteButton(
+                label: 'Save',
+                isElevated: true,
+                autofocus: false,
                 onPressed: () async {
                   final allSet = all.map((e) => e.code.toLowerCase()).toSet();
                   final next = temp.length == allSet.length ? null : temp;
@@ -310,7 +350,6 @@ class _SelectScreenState extends State<SelectScreen> {
                   if (!mounted) return;
                   Navigator.of(ctx).pop();
                 },
-                child: const Text('Save'),
               ),
             ],
           );
