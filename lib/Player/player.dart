@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:better_player/better_player.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:teve/Utils/teve_theme.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class Player extends StatefulWidget {
   Player({super.key, required this.video_url});
@@ -44,11 +45,19 @@ class _PlayerState extends State<Player> {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final screenAspectRatio =
-        size.height == 0 ? (16 / 9) : (size.width / size.height);
+  void initState() {
+    super.initState();
+    WakelockPlus.enable();
+  }
 
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final configuredPlayer = betterPlayerConfiguration.copyWith(
       fit: BoxFit.fill,
       autoDetectFullscreenDeviceOrientation: false,
